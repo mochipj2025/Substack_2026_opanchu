@@ -28,7 +28,7 @@
     }
     button, a { color: inherit; font: inherit; }
     main {
-      width: min(980px, 100%);
+      width: min(1080px, 100%);
       margin: 0 auto;
       padding: 16px;
     }
@@ -39,7 +39,7 @@
       gap: 10px;
       margin-bottom: 14px;
     }
-    .brand, .icon-btn, .stat, .panel, .tile-guide {
+    .brand, .icon-btn, .panel, .stat, .side-card {
       border: 4px solid var(--ink);
       border-radius: 8px;
       background: white;
@@ -64,6 +64,10 @@
       place-items: center;
       min-width: 48px;
       min-height: 48px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
       padding: 8px 12px;
       text-decoration: none;
       font-weight: 1000;
@@ -72,7 +76,7 @@
     }
     .icon-btn:active {
       transform: translate(4px, 4px);
-      box-shadow: 2px 2px 0 var(--ink);
+      box-shadow: 1px 1px 0 var(--ink);
     }
     .panel {
       overflow: hidden;
@@ -87,14 +91,14 @@
     }
     h1 {
       margin: 0;
-      font-size: clamp(34px, 8vw, 62px);
+      font-size: clamp(34px, 8vw, 64px);
       line-height: .95;
       letter-spacing: 0;
     }
     .lead {
       margin: 8px 0 0;
       max-width: 720px;
-      font-weight: 850;
+      font-weight: 900;
       line-height: 1.55;
     }
     .stats {
@@ -128,16 +132,48 @@
       gap: 14px;
       padding: 14px;
     }
+    .board-wrap {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+    .rule-strip {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: #fff8d9;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 10px;
+      font-weight: 1000;
+    }
+    .rule-strip img {
+      width: 100%;
+      max-width: 78px;
+      aspect-ratio: 1 / 1;
+      justify-self: center;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      object-fit: contain;
+      padding: 4px;
+    }
+    .rule-symbol {
+      font-size: 24px;
+      text-align: center;
+    }
     .board {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
+      gap: 9px;
       width: calc(100% - 8px);
       max-width: 620px;
       margin: 0 auto;
-      touch-action: none;
     }
-    .cell {
+    .slot {
+      position: relative;
       display: grid;
       place-items: center;
       aspect-ratio: 1 / 1;
@@ -147,20 +183,22 @@
       box-shadow: 4px 4px 0 rgba(17, 17, 17, .28);
       overflow: hidden;
     }
+    .slot.empty::after {
+      content: "+";
+      color: rgba(17, 17, 17, .18);
+      font-size: 34px;
+      font-weight: 1000;
+    }
     .tile {
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
       gap: 4px;
       width: 100%;
       height: 100%;
-      padding: 6px;
       border: 0;
       background: white;
-      animation: pop .13s ease-out;
-    }
-    .tile.merged {
-      animation: mergePop .26s ease-out;
-      background: #fff2a6;
+      padding: 6px;
+      cursor: pointer;
     }
     .tile img {
       width: 100%;
@@ -178,34 +216,62 @@
       font-weight: 1000;
       line-height: 1.05;
     }
+    .tile.selected {
+      background: #fff2a6;
+      outline: 5px solid var(--pink);
+      outline-offset: -8px;
+    }
+    .tile.matchable {
+      background: #d9fff3;
+      animation: pulse .8s ease-in-out infinite;
+    }
+    .tile.created {
+      animation: pop .18s ease-out;
+      background: #fff2a6;
+    }
     @keyframes pop {
-      from { transform: scale(.92); }
-      to { transform: scale(1); }
+      from { transform: scale(.82) rotate(-4deg); }
+      60% { transform: scale(1.12) rotate(2deg); }
+      to { transform: scale(1) rotate(0); }
     }
-    @keyframes mergePop {
-      0% { transform: scale(.82) rotate(-3deg); }
-      55% { transform: scale(1.12) rotate(2deg); }
-      100% { transform: scale(1) rotate(0); }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(.96); }
     }
-    .tile-guide {
+    .message {
+      min-height: 54px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 12px;
+      font-weight: 1000;
+      line-height: 1.45;
+    }
+    .side {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .side-card {
       display: grid;
       gap: 10px;
       padding: 12px;
       box-shadow: 5px 5px 0 var(--ink);
     }
-    .guide-title {
+    .side-card h2 {
       margin: 0;
       font-size: 18px;
-      font-weight: 1000;
+      line-height: 1.15;
     }
-    .next-row {
+    .target {
       display: grid;
-      grid-template-columns: 78px minmax(0, 1fr);
+      grid-template-columns: 82px minmax(0, 1fr);
       gap: 12px;
       align-items: center;
     }
-    .next-row img {
-      width: 78px;
+    .target img {
+      width: 82px;
       aspect-ratio: 1 / 1;
       border: 4px solid var(--ink);
       border-radius: 8px;
@@ -213,84 +279,34 @@
       object-fit: contain;
       padding: 5px;
     }
-    .message {
-      min-height: 1.5em;
+    .target p {
       margin: 0;
       font-weight: 900;
-      line-height: 1.5;
+      line-height: 1.45;
     }
-    .progress {
-      height: 18px;
-      overflow: hidden;
-      border: 3px solid var(--ink);
-      border-radius: 999px;
-      background: #fff;
-    }
-    .progress div {
-      height: 100%;
-      background: var(--pink);
-      transition: width .18s ease;
-    }
-    .rule-box {
+    .actions-grid {
       display: grid;
+      grid-template-columns: 1fr;
       gap: 8px;
-      border: 3px solid var(--ink);
-      border-radius: 8px;
-      background: #fff8d9;
-      padding: 10px;
-      font-weight: 900;
-      line-height: 1.4;
     }
-    .rule-box p {
-      margin: 0;
-    }
-    .merge-preview {
-      display: grid;
-      grid-template-columns: 54px 20px 54px 20px 54px;
-      gap: 4px;
-      align-items: center;
-      justify-content: center;
-    }
-    .merge-preview img {
-      width: 54px;
-      aspect-ratio: 1 / 1;
-      border: 3px solid var(--ink);
-      border-radius: 8px;
-      background: white;
-      object-fit: contain;
-      padding: 4px;
-    }
-    .merge-preview span {
-      text-align: center;
-      font-size: 18px;
-      font-weight: 1000;
-    }
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(3, 48px);
-      gap: 8px;
-      justify-content: center;
-    }
-    .controls button {
-      min-width: 48px;
-      min-height: 48px;
+    .wide-btn {
       border: 4px solid var(--ink);
       border-radius: 8px;
-      background: white;
+      background: var(--yellow);
       box-shadow: 4px 4px 0 var(--ink);
-      font-size: 22px;
+      padding: 12px;
       font-weight: 1000;
       cursor: pointer;
     }
-    .controls .blank {
-      visibility: hidden;
+    .wide-btn.secondary {
+      background: white;
     }
-    .evolution {
+    .dex {
       display: grid;
       grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 5px;
     }
-    .evolution img {
+    .dex img {
       width: 100%;
       aspect-ratio: 1 / 1;
       border: 2px solid var(--ink);
@@ -298,9 +314,9 @@
       background: white;
       object-fit: contain;
       padding: 2px;
-      opacity: .34;
+      opacity: .28;
     }
-    .evolution img.unlocked {
+    .dex img.unlocked {
       opacity: 1;
       background: #fff2a6;
     }
@@ -320,7 +336,7 @@
       width: min(420px, calc(100% - 32px));
     }
     .toast.show { display: block; }
-    @media (min-width: 820px) {
+    @media (min-width: 860px) {
       main { padding: 24px; }
       .game-head {
         grid-template-columns: minmax(0, 1fr) 330px;
@@ -328,7 +344,7 @@
         padding: 18px;
       }
       .play-area {
-        grid-template-columns: minmax(0, 620px) 260px;
+        grid-template-columns: minmax(0, 640px) 290px;
         justify-content: center;
         align-items: start;
         padding: 18px;
@@ -342,22 +358,22 @@
       .stat { padding: 7px 5px; }
       .stat-value { font-size: 18px; }
       .board { gap: 7px; }
-      .cell { border-width: 3px; }
+      .slot { border-width: 3px; }
       .tile { padding: 4px; }
       .tile span { display: none; }
-      .merge-preview {
-        grid-template-columns: 46px 16px 46px 16px 46px;
+      .rule-strip {
+        grid-template-columns: 54px 18px 54px 18px 54px;
+        justify-content: center;
       }
-      .merge-preview img {
-        width: 46px;
-      }
+      .rule-strip img { max-width: 54px; }
+      .rule-symbol { font-size: 18px; }
     }
   </style>
 </head>
 <body>
   <main>
     <div class="topbar">
-      <div class="brand"><span>OPANCHU MERGE</span>おぱんちゅマージ</div>
+      <div class="brand"><span>OPANCHU MERGE CLOSET</span>おぱんちゅマージ</div>
       <div class="actions">
         <a class="icon-btn" href="../index.html" title="入口へ戻る" aria-label="入口へ戻る">⌂</a>
         <button class="icon-btn" id="resetBtn" type="button" title="最初から" aria-label="最初から">↻</button>
@@ -368,7 +384,7 @@
       <div class="game-head">
         <div>
           <h1>おぱんちゅ<br>マージ</h1>
-          <p class="lead">上下左右に動かして、同じパンツ札をぶつけると合体。01 + 01 = 02、02 + 02 = 03 の順に進化します。</p>
+          <p class="lead">同じパンツ札を2枚タップして合成。01 + 01 = 02、02 + 02 = 03。クローゼットをいっぱいにする前に12番札を目指します。</p>
         </div>
         <div class="stats" aria-label="スコア">
           <div class="stat"><span class="stat-label">スコア</span><span class="stat-value" id="score">0</span></div>
@@ -378,35 +394,38 @@
       </div>
 
       <div class="play-area">
-        <div class="board" id="board" aria-label="マージ盤面"></div>
-        <aside class="tile-guide" aria-label="進化状況">
-          <div class="rule-box">
-            <p>ルール</p>
-            <p>同じ札を2枚ぶつけると、1つ上の札に進化します。動かすたびに新しい札が1枚出ます。</p>
-            <div class="merge-preview">
-              <img id="previewA" src="../assets/shorts/p01.png" alt="">
-              <span>+</span>
-              <img id="previewB" src="../assets/shorts/p01.png" alt="">
-              <span>=</span>
-              <img id="previewC" src="../assets/shorts/p02.png" alt="">
+        <div class="board-wrap">
+          <div class="rule-strip" aria-label="合成ルール">
+            <img src="../assets/shorts/p01.png" alt="">
+            <span class="rule-symbol">+</span>
+            <img src="../assets/shorts/p01.png" alt="">
+            <span class="rule-symbol">=</span>
+            <img src="../assets/shorts/p02.png" alt="">
+          </div>
+          <div class="board" id="board" aria-label="クローゼット盤面"></div>
+          <div class="message" id="message">同じ札を2枚選ぶと合成できます。</div>
+        </div>
+
+        <aside class="side" aria-label="進行状況">
+          <div class="side-card">
+            <h2>次の目標</h2>
+            <div class="target">
+              <img id="targetImage" src="../assets/shorts/p02.png" alt="">
+              <p id="targetText">まずは02番札を作ろう。</p>
             </div>
           </div>
-          <p class="guide-title">次に目指す札</p>
-          <div class="next-row">
-            <img id="nextImage" src="../assets/shorts/p02.png" alt="">
-            <p class="message" id="message">同じ札を重ねて進化させよう。</p>
+          <div class="side-card">
+            <h2>操作</h2>
+            <div class="actions-grid">
+              <button class="wide-btn" id="drawBtn" type="button">1枚補充</button>
+              <button class="wide-btn secondary" id="hintBtn" type="button">合成できる札を光らせる</button>
+              <button class="wide-btn secondary" id="copyBtn" type="button">結果コピー</button>
+            </div>
           </div>
-          <div class="progress" aria-label="進化進捗"><div id="progress"></div></div>
-          <div class="controls" aria-label="操作ボタン">
-            <span class="blank"></span>
-            <button type="button" data-move="up" aria-label="上へ動かす">↑</button>
-            <span class="blank"></span>
-            <button type="button" data-move="left" aria-label="左へ動かす">←</button>
-            <button type="button" data-move="down" aria-label="下へ動かす">↓</button>
-            <button type="button" data-move="right" aria-label="右へ動かす">→</button>
+          <div class="side-card">
+            <h2>図鑑</h2>
+            <div class="dex" id="dex" aria-label="解放済み札"></div>
           </div>
-          <div class="evolution" id="evolution" aria-label="進化表"></div>
-          <button class="icon-btn" id="copyBtn" type="button">□ 結果コピー</button>
         </aside>
       </div>
     </section>
@@ -428,176 +447,198 @@
       { name: "おぱんちゅ 11", src: "../assets/shorts/p11.png" },
       { name: "おぱんちゅ 12", src: "../assets/shorts/p12.png" }
     ];
-    const size = 4;
-    const bestKey = "opanchu_merge_best";
+    const slotCount = 16;
+    const bestKey = "opanchu_merge_closet_best";
     const boardEl = document.getElementById("board");
     const scoreEl = document.getElementById("score");
     const bestEl = document.getElementById("best");
     const maxTileEl = document.getElementById("maxTile");
-    const nextImageEl = document.getElementById("nextImage");
-    const previewAEl = document.getElementById("previewA");
-    const previewBEl = document.getElementById("previewB");
-    const previewCEl = document.getElementById("previewC");
+    const targetImageEl = document.getElementById("targetImage");
+    const targetTextEl = document.getElementById("targetText");
     const messageEl = document.getElementById("message");
-    const progressEl = document.getElementById("progress");
-    const evolutionEl = document.getElementById("evolution");
+    const dexEl = document.getElementById("dex");
     const toastEl = document.getElementById("toast");
-    let grid = [];
-    let mergedCells = [];
+    let slots = [];
+    let selectedIndex = null;
     let score = 0;
     let maxRank = 0;
-    let gameOver = false;
-    let touchStart = null;
-
-    function emptyGrid() {
-      return Array.from({ length: size }, () => Array(size).fill(null));
-    }
+    let lastCreatedIndex = null;
+    let hintRank = null;
+    let gameEnded = false;
 
     function setup() {
-      grid = emptyGrid();
-      mergedCells = [];
+      slots = Array(slotCount).fill(null);
+      selectedIndex = null;
       score = 0;
       maxRank = 0;
-      gameOver = false;
-      addRandomTile();
-      addRandomTile();
+      lastCreatedIndex = null;
+      hintRank = null;
+      gameEnded = false;
+      for (let i = 0; i < 6; i += 1) addRandomTile(false);
       render();
+      setMessage("同じ札を2枚選ぶと合成できます。");
     }
 
-    function addRandomTile() {
-      const empties = [];
-      for (let r = 0; r < size; r += 1) {
-        for (let c = 0; c < size; c += 1) {
-          if (grid[r][c] === null) empties.push([r, c]);
-        }
+    function randomStarterRank() {
+      const roll = Math.random();
+      if (maxRank >= 4 && roll > .92) return 2;
+      if (maxRank >= 2 && roll > .76) return 1;
+      return 0;
+    }
+
+    function emptyIndexes() {
+      return slots.map((value, index) => value === null ? index : null).filter((value) => value !== null);
+    }
+
+    function addRandomTile(showMessage = true) {
+      if (gameEnded) return false;
+      const empties = emptyIndexes();
+      if (!empties.length) {
+        checkEndState();
+        return false;
       }
-      if (!empties.length) return false;
-      const [r, c] = empties[Math.floor(Math.random() * empties.length)];
-      grid[r][c] = Math.random() < 0.86 ? 0 : 1;
+      const index = empties[Math.floor(Math.random() * empties.length)];
+      slots[index] = randomStarterRank();
+      lastCreatedIndex = index;
+      if (showMessage) setMessage(`${items[slots[index]].name}を補充しました。`);
+      checkEndState();
       return true;
     }
 
     function render() {
       boardEl.innerHTML = "";
-      for (let r = 0; r < size; r += 1) {
-        for (let c = 0; c < size; c += 1) {
-          const cell = document.createElement("div");
-          cell.className = "cell";
-          const rank = grid[r][c];
-          if (rank !== null) {
-            const item = items[rank];
-            const merged = mergedCells.some(([mr, mc]) => mr === r && mc === c);
-            cell.innerHTML = `<div class="tile ${merged ? "merged" : ""}"><img src="${item.src}" alt=""><span>${item.name}</span></div>`;
-          }
-          boardEl.appendChild(cell);
+      slots.forEach((rank, index) => {
+        const slot = document.createElement("div");
+        slot.className = `slot ${rank === null ? "empty" : ""}`;
+        if (rank !== null) {
+          const item = items[rank];
+          const selected = selectedIndex === index;
+          const matchable = hintRank !== null && rank === hintRank;
+          const created = lastCreatedIndex === index;
+          slot.innerHTML = `
+            <button class="tile ${selected ? "selected" : ""} ${matchable ? "matchable" : ""} ${created ? "created" : ""}" type="button" data-index="${index}">
+              <img src="${item.src}" alt="">
+              <span>${item.name}</span>
+            </button>
+          `;
         }
-      }
+        boardEl.appendChild(slot);
+      });
+      boardEl.querySelectorAll("[data-index]").forEach((button) => {
+        button.addEventListener("click", () => selectTile(Number(button.dataset.index)));
+      });
       const best = Math.max(Number(localStorage.getItem(bestKey) || 0), score);
       localStorage.setItem(bestKey, String(best));
       scoreEl.textContent = score;
       bestEl.textContent = best;
       maxTileEl.textContent = String(maxRank + 1).padStart(2, "0");
-      const nextRank = Math.min(maxRank + 1, items.length - 1);
-      nextImageEl.src = items[nextRank].src;
-      const previewRank = Math.min(maxRank, items.length - 2);
-      previewAEl.src = items[previewRank].src;
-      previewBEl.src = items[previewRank].src;
-      previewCEl.src = items[previewRank + 1].src;
-      progressEl.style.width = `${((maxRank + 1) / items.length) * 100}%`;
-      evolutionEl.innerHTML = items.map((item, index) => `<img class="${index <= maxRank ? "unlocked" : ""}" src="${item.src}" alt="">`).join("");
+      const targetRank = Math.min(maxRank + 1, items.length - 1);
+      targetImageEl.src = items[targetRank].src;
+      targetTextEl.textContent = maxRank >= items.length - 1 ? "12番札達成。完全勝利です。" : `次は${items[targetRank].name}を作ろう。`;
+      dexEl.innerHTML = items.map((item, index) => `<img class="${index <= maxRank ? "unlocked" : ""}" src="${item.src}" alt="">`).join("");
+    }
+
+    function selectTile(index) {
+      if (gameEnded || slots[index] === null) return;
+      hintRank = null;
+      lastCreatedIndex = null;
+      if (selectedIndex === null) {
+        selectedIndex = index;
+        setMessage(`${items[slots[index]].name}を選択中。同じ札をもう1枚タップ。`);
+        render();
+        return;
+      }
+      if (selectedIndex === index) {
+        selectedIndex = null;
+        setMessage("選択を解除しました。");
+        render();
+        return;
+      }
+      if (slots[selectedIndex] !== slots[index]) {
+        selectedIndex = index;
+        setMessage("違う札なので合成できません。同じ札を選んでください。");
+        render();
+        return;
+      }
+      mergeTiles(selectedIndex, index);
+    }
+
+    function mergeTiles(firstIndex, secondIndex) {
+      const fromRank = slots[firstIndex];
+      if (fromRank >= items.length - 1) {
+        selectedIndex = null;
+        setMessage("12番札は最終形です。これ以上は合成できません。");
+        render();
+        return;
+      }
+      const nextRank = fromRank + 1;
+      slots[firstIndex] = nextRank;
+      slots[secondIndex] = null;
+      selectedIndex = null;
+      lastCreatedIndex = firstIndex;
+      maxRank = Math.max(maxRank, nextRank);
+      score += (nextRank + 1) * 20;
+      setMessage(`${items[fromRank].name} + ${items[fromRank].name} = ${items[nextRank].name}`);
+      showToast(`${items[nextRank].name}に進化`);
       if (maxRank >= items.length - 1) {
-        messageEl.textContent = "全おぱんちゅ進化、達成。これは強い。";
-      } else if (gameOver) {
-        messageEl.textContent = "盤面いっぱい。もう一回で記憶を取り戻そう。";
+        gameEnded = true;
+        setMessage("12番札まで進化。おぱんちゅマージ完全勝利。");
       } else {
-        messageEl.textContent = `次は${items[nextRank].name}を目指そう。`;
+        addRandomTile(false);
       }
-    }
-
-    function slideLine(line) {
-      const compact = line.filter((value) => value !== null);
-      const merged = [];
-      let gained = 0;
-      const mergedIndexes = [];
-      const mergeEvents = [];
-      for (let i = 0; i < compact.length; i += 1) {
-        if (compact[i] !== null && compact[i] === compact[i + 1] && compact[i] < items.length - 1) {
-          const next = compact[i] + 1;
-          merged.push(next);
-          mergedIndexes.push(merged.length - 1);
-          mergeEvents.push({ from: compact[i], to: next });
-          gained += (next + 1) * 10;
-          maxRank = Math.max(maxRank, next);
-          i += 1;
-        } else {
-          merged.push(compact[i]);
-        }
-      }
-      while (merged.length < size) merged.push(null);
-      return { line: merged, gained, mergedIndexes, mergeEvents };
-    }
-
-    function move(direction) {
-      if (gameOver) return;
-      const before = JSON.stringify(grid);
-      let gained = 0;
-      const nextMergedCells = [];
-      const mergeEvents = [];
-      if (direction === "left" || direction === "right") {
-        for (let r = 0; r < size; r += 1) {
-          const source = direction === "left" ? grid[r] : [...grid[r]].reverse();
-          const result = slideLine(source);
-          grid[r] = direction === "left" ? result.line : result.line.reverse();
-          gained += result.gained;
-          result.mergedIndexes.forEach((index) => {
-            nextMergedCells.push([r, direction === "left" ? index : size - 1 - index]);
-          });
-          mergeEvents.push(...result.mergeEvents);
-        }
-      } else {
-        for (let c = 0; c < size; c += 1) {
-          const col = [];
-          for (let r = 0; r < size; r += 1) col.push(grid[r][c]);
-          const source = direction === "up" ? col : col.reverse();
-          const result = slideLine(source);
-          const nextCol = direction === "up" ? result.line : result.line.reverse();
-          for (let r = 0; r < size; r += 1) grid[r][c] = nextCol[r];
-          gained += result.gained;
-          result.mergedIndexes.forEach((index) => {
-            nextMergedCells.push([direction === "up" ? index : size - 1 - index, c]);
-          });
-          mergeEvents.push(...result.mergeEvents);
-        }
-      }
-      if (JSON.stringify(grid) === before) return;
-      mergedCells = nextMergedCells;
-      score += gained;
-      addRandomTile();
-      gameOver = !hasMoves();
+      checkEndState();
       render();
-      if (mergeEvents.length) {
-        const event = mergeEvents[mergeEvents.length - 1];
-        messageEl.textContent = `${items[event.from].name} + ${items[event.from].name} = ${items[event.to].name}`;
-        showToast(`${items[event.to].name}に進化`);
+    }
+
+    function hasPair() {
+      const counts = new Map();
+      slots.forEach((rank) => {
+        if (rank === null || rank >= items.length - 1) return;
+        counts.set(rank, (counts.get(rank) || 0) + 1);
+      });
+      return [...counts.values()].some((count) => count >= 2);
+    }
+
+    function firstPairRank() {
+      const seen = new Set();
+      for (const rank of slots) {
+        if (rank === null || rank >= items.length - 1) continue;
+        if (seen.has(rank)) return rank;
+        seen.add(rank);
+      }
+      return null;
+    }
+
+    function checkEndState() {
+      if (gameEnded) return;
+      if (emptyIndexes().length === 0 && !hasPair()) {
+        gameEnded = true;
+        setMessage("クローゼット満杯。合成できる札がありません。");
       }
     }
 
-    function hasMoves() {
-      for (let r = 0; r < size; r += 1) {
-        for (let c = 0; c < size; c += 1) {
-          const value = grid[r][c];
-          if (value === null) return true;
-          if (r < size - 1 && grid[r + 1][c] === value && value < items.length - 1) return true;
-          if (c < size - 1 && grid[r][c + 1] === value && value < items.length - 1) return true;
-        }
-      }
-      return false;
+    function setMessage(text) {
+      messageEl.textContent = text;
     }
 
-    function showToast(message) {
-      toastEl.textContent = message;
-      toastEl.classList.add("show");
-      setTimeout(() => toastEl.classList.remove("show"), 900);
+    function showHint() {
+      const rank = firstPairRank();
+      if (rank === null) {
+        setMessage("今は合成できるペアがありません。1枚補充するか、最初からやり直そう。");
+        hintRank = null;
+      } else {
+        hintRank = rank;
+        setMessage(`${items[rank].name}が合成できます。光っている札を2枚タップ。`);
+      }
+      render();
+    }
+
+    function drawTile() {
+      selectedIndex = null;
+      hintRank = null;
+      lastCreatedIndex = null;
+      if (!addRandomTile(true)) setMessage("空き枠がありません。合成できる札を探そう。");
+      render();
     }
 
     async function copyResult() {
@@ -610,30 +651,16 @@
       }
     }
 
-    document.addEventListener("keydown", (event) => {
-      const map = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down" };
-      if (!map[event.key]) return;
-      event.preventDefault();
-      move(map[event.key]);
-    });
-    boardEl.addEventListener("touchstart", (event) => {
-      const touch = event.touches[0];
-      touchStart = { x: touch.clientX, y: touch.clientY };
-    }, { passive: true });
-    boardEl.addEventListener("touchend", (event) => {
-      if (!touchStart) return;
-      const touch = event.changedTouches[0];
-      const dx = touch.clientX - touchStart.x;
-      const dy = touch.clientY - touchStart.y;
-      touchStart = null;
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
-      move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up"));
-    }, { passive: true });
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 1200);
+    }
+
     document.getElementById("resetBtn").addEventListener("click", setup);
+    document.getElementById("drawBtn").addEventListener("click", drawTile);
+    document.getElementById("hintBtn").addEventListener("click", showHint);
     document.getElementById("copyBtn").addEventListener("click", copyResult);
-    document.querySelectorAll("[data-move]").forEach((button) => {
-      button.addEventListener("click", () => move(button.dataset.move));
-    });
     setup();
   </script>
 </body>

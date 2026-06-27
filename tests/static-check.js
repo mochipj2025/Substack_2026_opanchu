@@ -154,7 +154,7 @@ for (let i = 1; i <= 12; i += 1) {
 ["level", "nextLevelBtn", "opanchu_memory_best_level_"].forEach((needle) => {
   assert.ok(gameHtml.includes(needle), `Missing level feature: ${needle}`);
 });
-["おぱんちゅマージ", "opanchu_merge_best", "ArrowLeft", "touchstart"].forEach((needle) => {
+["おぱんちゅマージ", "opanchu_merge_closet_best", "同じ札を2枚", "drawBtn", "hintBtn"].forEach((needle) => {
   assert.ok(mergeHtml.includes(needle), `Missing merge game feature: ${needle}`);
 });
 for (let i = 1; i <= 12; i += 1) {
