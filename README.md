@@ -4,7 +4,7 @@
 
 ## 現在の成果物
 
-- `src/index.html`: 1ファイル完結の診断アプリ本体
+- `src/diagnosis.html`: 1ファイル完結の診断アプリ本体
 - `src/memory-game.html`: おぱんちゅ神経衰弱ミニゲーム
 - `docs/01_企画書.md`: 企画の目的、世界観、ユーザー体験
 - `docs/02_実装計画書.md`: フェーズ、作業順、検証観点
@@ -14,7 +14,7 @@
 
 ## 起動方法
 
-`index.html` は入口メニューです。診断は `src/index.html`、神経衰弱は `src/memory-game.html` から直接開けます。
+`index.html` は入口メニューです。診断は `src/diagnosis.html`、神経衰弱は `src/memory-game.html` から直接開けます。`src/index.html` は入口へ戻すリダイレクトです。
 
 ローカルサーバーで確認する場合:
 

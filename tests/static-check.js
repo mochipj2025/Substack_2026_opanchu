@@ -5,8 +5,10 @@ const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 
 const root = path.resolve(__dirname, "..");
-const htmlPath = path.join(root, "src", "index.html");
+const htmlPath = path.join(root, "src", "diagnosis.html");
 const html = fs.readFileSync(htmlPath, "utf8");
+const srcIndexPath = path.join(root, "src", "index.html");
+const srcIndex = fs.readFileSync(srcIndexPath, "utf8");
 const gamePath = path.join(root, "src", "memory-game.html");
 const gameHtml = fs.readFileSync(gamePath, "utf8");
 const takopanCoverPath = path.join(root, "assets", "takopan-memory-card-final.png");
@@ -101,8 +103,8 @@ const qCount = (appScript.match(/\btext: '/g) || []).length;
 assert.ok(qCount >= 5, `Expected question/result text data, found only ${qCount} text entries`);
 
 assert.ok(
-  publicIndex.includes("src/index.html"),
-  "Root index.html should link to src/index.html",
+  publicIndex.includes("src/diagnosis.html"),
+  "Root index.html should link to src/diagnosis.html",
 );
 assert.ok(
   publicIndex.includes("src/memory-game.html"),
@@ -111,6 +113,7 @@ assert.ok(
 ["おぱんちゅラボ", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
 });
+assert.ok(srcIndex.includes("../index.html"), "src/index.html should redirect to the portal");
 ["おぱんちゅ神経衰弱", "pairs", "moves", "opanchu_memory_best"].forEach((needle) => {
   assert.ok(gameHtml.includes(needle), `Missing game text or control: ${needle}`);
 });
