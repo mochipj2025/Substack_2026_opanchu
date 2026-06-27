@@ -132,7 +132,8 @@
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
-      width: min(620px, 100%);
+      width: calc(100% - 8px);
+      max-width: 620px;
       margin: 0 auto;
       touch-action: none;
     }
