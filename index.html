@@ -112,6 +112,23 @@
       background: #fff;
       padding: 10px;
     }
+    .diagnosis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+    }
+    .diagnosis-grid img {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: #fffaf0;
+      object-fit: cover;
+      object-position: top center;
+    }
     .body {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 58px;
@@ -216,7 +233,14 @@
     <section class="entries" aria-label="コンテンツ">
       <a class="entry diagnosis-card" href="src/diagnosis.html">
         <div class="media diagnosis" aria-hidden="true">
-          <img src="generated_types_contact.jpg" alt="">
+          <div class="diagnosis-grid">
+            <img src="asset/generated-types/girl-normal.png" alt="">
+            <img src="asset/generated-types/girl-tie.png" alt="">
+            <img src="asset/generated-types/girl-tback.png" alt="">
+            <img src="asset/generated-types/girl-sanitary.png" alt="">
+            <img src="asset/generated-types/girl-gray.png" alt="">
+            <img src="asset/generated-types/girl-seamless.png" alt="">
+          </div>
         </div>
         <div class="body">
           <span>

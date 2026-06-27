@@ -113,6 +113,9 @@ assert.ok(
 ["おぱんちゅラボ", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
 });
+["girl-normal.png", "girl-tie.png", "girl-tback.png", "girl-sanitary.png", "girl-gray.png", "girl-seamless.png"].forEach((fileName) => {
+  assert.ok(publicIndex.includes(`asset/generated-types/${fileName}`), `Root index should reference ${fileName}`);
+});
 assert.ok(srcIndex.includes("../index.html"), "src/index.html should redirect to the portal");
 ["このURLは", "診断を直接開く", "memory-game.html"].forEach((needle) => {
   assert.ok(srcIndex.includes(needle), `src/index.html should explain the moved URL: ${needle}`);
