@@ -207,13 +207,13 @@
         padding: 24px;
       }
       .entries {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
       .entry {
-        min-height: calc(100vh - 210px);
+        min-height: min(620px, calc(100vh - 210px));
       }
       .media {
-        min-height: 360px;
+        min-height: 300px;
       }
     }
     @media (max-width: 620px) {
