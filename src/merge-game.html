@@ -158,6 +158,10 @@
       background: white;
       animation: pop .13s ease-out;
     }
+    .tile.merged {
+      animation: mergePop .26s ease-out;
+      background: #fff2a6;
+    }
     .tile img {
       width: 100%;
       height: 100%;
@@ -177,6 +181,11 @@
     @keyframes pop {
       from { transform: scale(.92); }
       to { transform: scale(1); }
+    }
+    @keyframes mergePop {
+      0% { transform: scale(.82) rotate(-3deg); }
+      55% { transform: scale(1.12) rotate(2deg); }
+      100% { transform: scale(1) rotate(0); }
     }
     .tile-guide {
       display: grid;
@@ -222,6 +231,79 @@
       background: var(--pink);
       transition: width .18s ease;
     }
+    .rule-box {
+      display: grid;
+      gap: 8px;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: #fff8d9;
+      padding: 10px;
+      font-weight: 900;
+      line-height: 1.4;
+    }
+    .rule-box p {
+      margin: 0;
+    }
+    .merge-preview {
+      display: grid;
+      grid-template-columns: 54px 20px 54px 20px 54px;
+      gap: 4px;
+      align-items: center;
+      justify-content: center;
+    }
+    .merge-preview img {
+      width: 54px;
+      aspect-ratio: 1 / 1;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      object-fit: contain;
+      padding: 4px;
+    }
+    .merge-preview span {
+      text-align: center;
+      font-size: 18px;
+      font-weight: 1000;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, 48px);
+      gap: 8px;
+      justify-content: center;
+    }
+    .controls button {
+      min-width: 48px;
+      min-height: 48px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
+      font-size: 22px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+    .controls .blank {
+      visibility: hidden;
+    }
+    .evolution {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 5px;
+    }
+    .evolution img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 2px solid var(--ink);
+      border-radius: 6px;
+      background: white;
+      object-fit: contain;
+      padding: 2px;
+      opacity: .34;
+    }
+    .evolution img.unlocked {
+      opacity: 1;
+      background: #fff2a6;
+    }
     .toast {
       position: fixed;
       left: 50%;
@@ -263,6 +345,12 @@
       .cell { border-width: 3px; }
       .tile { padding: 4px; }
       .tile span { display: none; }
+      .merge-preview {
+        grid-template-columns: 46px 16px 46px 16px 46px;
+      }
+      .merge-preview img {
+        width: 46px;
+      }
     }
   </style>
 </head>
@@ -280,7 +368,7 @@
       <div class="game-head">
         <div>
           <h1>おぱんちゅ<br>マージ</h1>
-          <p class="lead">矢印キーかスワイプで札を動かします。同じパンツ札がぶつかると合体して、次の種類に進化します。</p>
+          <p class="lead">上下左右に動かして、同じパンツ札をぶつけると合体。01 + 01 = 02、02 + 02 = 03 の順に進化します。</p>
         </div>
         <div class="stats" aria-label="スコア">
           <div class="stat"><span class="stat-label">スコア</span><span class="stat-value" id="score">0</span></div>
@@ -292,12 +380,32 @@
       <div class="play-area">
         <div class="board" id="board" aria-label="マージ盤面"></div>
         <aside class="tile-guide" aria-label="進化状況">
+          <div class="rule-box">
+            <p>ルール</p>
+            <p>同じ札を2枚ぶつけると、1つ上の札に進化します。動かすたびに新しい札が1枚出ます。</p>
+            <div class="merge-preview">
+              <img id="previewA" src="../assets/shorts/p01.png" alt="">
+              <span>+</span>
+              <img id="previewB" src="../assets/shorts/p01.png" alt="">
+              <span>=</span>
+              <img id="previewC" src="../assets/shorts/p02.png" alt="">
+            </div>
+          </div>
           <p class="guide-title">次に目指す札</p>
           <div class="next-row">
             <img id="nextImage" src="../assets/shorts/p02.png" alt="">
             <p class="message" id="message">同じ札を重ねて進化させよう。</p>
           </div>
           <div class="progress" aria-label="進化進捗"><div id="progress"></div></div>
+          <div class="controls" aria-label="操作ボタン">
+            <span class="blank"></span>
+            <button type="button" data-move="up" aria-label="上へ動かす">↑</button>
+            <span class="blank"></span>
+            <button type="button" data-move="left" aria-label="左へ動かす">←</button>
+            <button type="button" data-move="down" aria-label="下へ動かす">↓</button>
+            <button type="button" data-move="right" aria-label="右へ動かす">→</button>
+          </div>
+          <div class="evolution" id="evolution" aria-label="進化表"></div>
           <button class="icon-btn" id="copyBtn" type="button">□ 結果コピー</button>
         </aside>
       </div>
@@ -327,10 +435,15 @@
     const bestEl = document.getElementById("best");
     const maxTileEl = document.getElementById("maxTile");
     const nextImageEl = document.getElementById("nextImage");
+    const previewAEl = document.getElementById("previewA");
+    const previewBEl = document.getElementById("previewB");
+    const previewCEl = document.getElementById("previewC");
     const messageEl = document.getElementById("message");
     const progressEl = document.getElementById("progress");
+    const evolutionEl = document.getElementById("evolution");
     const toastEl = document.getElementById("toast");
     let grid = [];
+    let mergedCells = [];
     let score = 0;
     let maxRank = 0;
     let gameOver = false;
@@ -342,6 +455,7 @@
 
     function setup() {
       grid = emptyGrid();
+      mergedCells = [];
       score = 0;
       maxRank = 0;
       gameOver = false;
@@ -372,7 +486,8 @@
           const rank = grid[r][c];
           if (rank !== null) {
             const item = items[rank];
-            cell.innerHTML = `<div class="tile"><img src="${item.src}" alt=""><span>${item.name}</span></div>`;
+            const merged = mergedCells.some(([mr, mc]) => mr === r && mc === c);
+            cell.innerHTML = `<div class="tile ${merged ? "merged" : ""}"><img src="${item.src}" alt=""><span>${item.name}</span></div>`;
           }
           boardEl.appendChild(cell);
         }
@@ -384,7 +499,12 @@
       maxTileEl.textContent = String(maxRank + 1).padStart(2, "0");
       const nextRank = Math.min(maxRank + 1, items.length - 1);
       nextImageEl.src = items[nextRank].src;
+      const previewRank = Math.min(maxRank, items.length - 2);
+      previewAEl.src = items[previewRank].src;
+      previewBEl.src = items[previewRank].src;
+      previewCEl.src = items[previewRank + 1].src;
       progressEl.style.width = `${((maxRank + 1) / items.length) * 100}%`;
+      evolutionEl.innerHTML = items.map((item, index) => `<img class="${index <= maxRank ? "unlocked" : ""}" src="${item.src}" alt="">`).join("");
       if (maxRank >= items.length - 1) {
         messageEl.textContent = "全おぱんちゅ進化、達成。これは強い。";
       } else if (gameOver) {
@@ -398,10 +518,14 @@
       const compact = line.filter((value) => value !== null);
       const merged = [];
       let gained = 0;
+      const mergedIndexes = [];
+      const mergeEvents = [];
       for (let i = 0; i < compact.length; i += 1) {
         if (compact[i] !== null && compact[i] === compact[i + 1] && compact[i] < items.length - 1) {
           const next = compact[i] + 1;
           merged.push(next);
+          mergedIndexes.push(merged.length - 1);
+          mergeEvents.push({ from: compact[i], to: next });
           gained += (next + 1) * 10;
           maxRank = Math.max(maxRank, next);
           i += 1;
@@ -410,19 +534,25 @@
         }
       }
       while (merged.length < size) merged.push(null);
-      return { line: merged, gained };
+      return { line: merged, gained, mergedIndexes, mergeEvents };
     }
 
     function move(direction) {
       if (gameOver) return;
       const before = JSON.stringify(grid);
       let gained = 0;
+      const nextMergedCells = [];
+      const mergeEvents = [];
       if (direction === "left" || direction === "right") {
         for (let r = 0; r < size; r += 1) {
           const source = direction === "left" ? grid[r] : [...grid[r]].reverse();
           const result = slideLine(source);
           grid[r] = direction === "left" ? result.line : result.line.reverse();
           gained += result.gained;
+          result.mergedIndexes.forEach((index) => {
+            nextMergedCells.push([r, direction === "left" ? index : size - 1 - index]);
+          });
+          mergeEvents.push(...result.mergeEvents);
         }
       } else {
         for (let c = 0; c < size; c += 1) {
@@ -433,14 +563,23 @@
           const nextCol = direction === "up" ? result.line : result.line.reverse();
           for (let r = 0; r < size; r += 1) grid[r][c] = nextCol[r];
           gained += result.gained;
+          result.mergedIndexes.forEach((index) => {
+            nextMergedCells.push([direction === "up" ? index : size - 1 - index, c]);
+          });
+          mergeEvents.push(...result.mergeEvents);
         }
       }
       if (JSON.stringify(grid) === before) return;
+      mergedCells = nextMergedCells;
       score += gained;
       addRandomTile();
       gameOver = !hasMoves();
       render();
-      if (gained > 0) showToast(`${gained}点マージ`);
+      if (mergeEvents.length) {
+        const event = mergeEvents[mergeEvents.length - 1];
+        messageEl.textContent = `${items[event.from].name} + ${items[event.from].name} = ${items[event.to].name}`;
+        showToast(`${items[event.to].name}に進化`);
+      }
     }
 
     function hasMoves() {
@@ -492,6 +631,9 @@
     }, { passive: true });
     document.getElementById("resetBtn").addEventListener("click", setup);
     document.getElementById("copyBtn").addEventListener("click", copyResult);
+    document.querySelectorAll("[data-move]").forEach((button) => {
+      button.addEventListener("click", () => move(button.dataset.move));
+    });
     setup();
   </script>
 </body>
