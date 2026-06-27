@@ -3,28 +3,247 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=src/index.html">
-  <title>JKパンツ生存戦略診断</title>
+  <title>おぱんちゅラボ</title>
   <style>
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #111;
+      --paper: #fffaf0;
+      --pink: #ff67b3;
+      --yellow: #ffe66f;
+      --mint: #35ffd4;
+      --blue: #7dd7ff;
+    }
     body {
       min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+      background:
+        linear-gradient(rgba(17, 17, 17, .07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 17, 17, .07) 1px, transparent 1px),
+        linear-gradient(135deg, #ffe66f 0%, #ff8fc8 48%, #35ffd4 100%);
+      background-size: 24px 24px, 24px 24px, auto;
+    }
+    a { color: inherit; text-decoration: none; }
+    .page {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+    header {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .brand {
+      display: grid;
+      gap: 8px;
+    }
+    .label {
+      width: fit-content;
+      border: 4px solid var(--ink);
+      border-radius: 999px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 1000;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(44px, 9vw, 90px);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+    .lead {
+      max-width: 420px;
+      margin: 0 0 8px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 12px;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+    .entries {
+      display: grid;
+      gap: 18px;
+    }
+    .entry {
+      display: grid;
+      min-height: 430px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 8px 8px 0 var(--ink);
+      overflow: hidden;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .entry:active {
+      transform: translate(5px, 5px);
+      box-shadow: 3px 3px 0 var(--ink);
+    }
+    .media {
       display: grid;
       place-items: center;
-      margin: 0;
-      font-family: system-ui, sans-serif;
-      background: #ffe66f;
-      color: #111;
+      min-height: 250px;
+      border-bottom: 4px solid var(--ink);
+      background: white;
+      overflow: hidden;
     }
-    a {
-      color: inherit;
-      font-weight: 900;
+    .media img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+    .media.memory {
+      background: #fff2cf;
+      padding: 18px;
+    }
+    .media.memory img {
+      max-height: 360px;
+    }
+    .media.diagnosis {
+      background: #fff;
+      padding: 10px;
+    }
+    .body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 58px;
+      gap: 12px;
+      align-items: center;
+      padding: 18px;
+    }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 8px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: white;
+      padding: 4px 9px;
+      font-size: 12px;
+      font-weight: 1000;
+    }
+    h2 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 44px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+    .entry p {
+      margin: 10px 0 0;
+      font-weight: 850;
+      line-height: 1.5;
+    }
+    .arrow {
+      display: grid;
+      place-items: center;
+      width: 58px;
+      aspect-ratio: 1 / 1;
+      border: 4px solid var(--ink);
+      border-radius: 999px;
+      background: white;
+      font-size: 30px;
+      font-weight: 1000;
+    }
+    .memory-card .body { background: var(--pink); }
+    .diagnosis-card .body { background: var(--yellow); }
+    footer {
+      margin-top: 18px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.5;
+    }
+    @media (min-width: 850px) {
+      .page {
+        padding: 24px;
+      }
+      .entries {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .entry {
+        min-height: calc(100vh - 210px);
+      }
+      .media {
+        min-height: 360px;
+      }
+    }
+    @media (max-width: 620px) {
+      .page { padding: 12px; }
+      header {
+        display: grid;
+      }
+      .lead {
+        max-width: none;
+      }
+      .entry {
+        min-height: 0;
+      }
+      .media {
+        min-height: 220px;
+      }
+      .body {
+        grid-template-columns: minmax(0, 1fr) 48px;
+        padding: 14px;
+      }
+      .arrow {
+        width: 48px;
+        font-size: 24px;
+      }
     }
   </style>
 </head>
 <body>
-  <p><a href="src/index.html">JKパンツ生存戦略診断を開く</a></p>
-  <script>
-    location.replace("src/index.html");
-  </script>
+  <main class="page">
+    <header>
+      <div class="brand">
+        <span class="label">OPANCHU LAB</span>
+        <h1>おぱんちゅ<br>ラボ</h1>
+      </div>
+      <p class="lead">遊ぶ入口を選んでください。診断とゲームを同じリポジトリにまとめています。</p>
+    </header>
+
+    <section class="entries" aria-label="コンテンツ">
+      <a class="entry diagnosis-card" href="src/index.html">
+        <div class="media diagnosis" aria-hidden="true">
+          <img src="generated_types_contact.jpg" alt="">
+        </div>
+        <div class="body">
+          <span>
+            <span class="eyebrow">DIAGNOSIS</span>
+            <h2>JKパンツ生存戦略診断</h2>
+            <p>5問で今日のメンタルをパンツタイプに判定するギャグ診断。</p>
+          </span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+
+      <a class="entry memory-card" href="src/memory-game.html">
+        <div class="media memory" aria-hidden="true">
+          <img src="assets/takopan-memory-card-final.png" alt="">
+        </div>
+        <div class="body">
+          <span>
+            <span class="eyebrow">GAME</span>
+            <h2>おぱんちゅ神経衰弱</h2>
+            <p>タコパンカードをめくって、パンツ札のペアをそろえるレベル制ゲーム。</p>
+          </span>
+          <span class="arrow">→</span>
+        </div>
+      </a>
+    </section>
+
+    <footer>下着テーマはギャグ・記号・ゲーム素材として扱っています。性的な演出ではなく、ツッコミながら遊ぶためのページです。</footer>
+  </main>
 </body>
 </html>

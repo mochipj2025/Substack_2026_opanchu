@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>おぱんちゅ神経衰弱</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #111;
+      --pink: #ff67b3;
+      --yellow: #ffe66f;
+      --mint: #36f0c7;
+      --sky: #7dd7ff;
+      --paper: #fffaf0;
+      --shadow: 6px 6px 0 var(--ink);
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+      background:
+        linear-gradient(rgba(17, 17, 17, .08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 17, 17, .08) 1px, transparent 1px),
+        linear-gradient(135deg, var(--yellow), #ff9bd1 48%, var(--mint));
+      background-size: 22px 22px, 22px 22px, auto;
+    }
+    main {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+    }
+    button, a {
+      color: inherit;
+      font: inherit;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .brand, .icon-btn, .stat, .panel, .result {
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .brand {
+      padding: 10px 14px;
+      font-weight: 1000;
+      line-height: 1.1;
+    }
+    .brand span {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      min-width: 48px;
+      min-height: 48px;
+      padding: 8px 12px;
+      text-decoration: none;
+      font-weight: 1000;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .icon-btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+    .panel {
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .game-head {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 4px solid var(--ink);
+      background: var(--sky);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 8vw, 58px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 8px 0 0;
+      max-width: 700px;
+      font-weight: 800;
+      line-height: 1.6;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .stat {
+      padding: 9px;
+      box-shadow: 4px 4px 0 var(--ink);
+      text-align: center;
+      min-width: 0;
+    }
+    .stat-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .stat-value {
+      display: block;
+      margin-top: 2px;
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+    .board-wrap {
+      padding: 14px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--board-cols, 4), minmax(58px, 1fr));
+      gap: 10px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .card {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      perspective: 800px;
+    }
+    .card:disabled {
+      cursor: default;
+    }
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+      transition: transform .22s ease;
+    }
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+    }
+    .face {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      backface-visibility: hidden;
+      box-shadow: 5px 5px 0 var(--ink);
+      overflow: hidden;
+    }
+    .back {
+      border: 0;
+      background: #fff5dc;
+      box-shadow: none;
+      overflow: hidden;
+    }
+    .takopan-cover {
+      width: 100%;
+      height: 100%;
+      background: #fff5dc;
+      object-fit: contain;
+      object-position: center;
+    }
+    .takopan-label {
+      display: none;
+    }
+    .front {
+      transform: rotateY(180deg);
+      background: white;
+      grid-template-rows: 1fr auto;
+      padding: 8px;
+    }
+    .symbol {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      font-size: clamp(34px, 10vw, 64px);
+    }
+    .shorts-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 6px;
+      filter: drop-shadow(0 5px 0 rgba(17, 17, 17, .16));
+    }
+    .card-name {
+      width: 100%;
+      margin-top: 7px;
+      overflow: hidden;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: clamp(11px, 2.6vw, 14px);
+      font-weight: 1000;
+    }
+    .result {
+      display: none;
+      margin: 14px;
+      padding: 16px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+    .result.show {
+      display: block;
+    }
+    .result h2 {
+      margin: 0;
+      font-size: clamp(24px, 6vw, 38px);
+      line-height: 1.1;
+    }
+    .result p {
+      margin: 10px 0 0;
+      font-weight: 850;
+      line-height: 1.6;
+    }
+    .result-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .primary {
+      background: var(--pink);
+    }
+    .secondary {
+      background: var(--yellow);
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      display: none;
+      transform: translateX(-50%);
+      border: 4px solid var(--ink);
+      border-radius: 999px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 10px 16px;
+      font-weight: 1000;
+      text-align: center;
+      width: min(420px, calc(100% - 32px));
+    }
+    .toast.show {
+      display: block;
+    }
+    @media (min-width: 760px) {
+      main { padding: 24px; }
+      .game-head {
+        grid-template-columns: minmax(0, 1fr) 330px;
+        align-items: end;
+        padding: 18px;
+      }
+      .board-wrap { padding: 18px; }
+      .board { gap: 14px; }
+    }
+    @media (max-width: 430px) {
+      .topbar { align-items: stretch; }
+      .brand { flex: 1; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .board { gap: 8px; }
+      .front { padding: 6px; }
+      .card-name { display: none; }
+      .result-actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <div class="brand"><span>OPANCHU MEMORY</span>おぱんちゅ神経衰弱</div>
+      <div class="actions">
+        <a class="icon-btn" href="./index.html" title="診断へ戻る" aria-label="診断へ戻る">⌂</a>
+        <button class="icon-btn" id="resetBtn" type="button" title="新しい山札" aria-label="新しい山札">↻</button>
+      </div>
+    </div>
+
+    <section class="panel" aria-label="おぱんちゅ神経衰弱">
+      <div class="game-head">
+        <div>
+          <h1>おぱんちゅ<br>神経衰弱</h1>
+          <p class="lead">同じおぱんちゅ札を2枚そろえるだけ。レベルが上がるほど種類が増えて、記憶の逃げ場がなくなります。</p>
+        </div>
+        <div class="stats" aria-label="スコア">
+          <div class="stat"><span class="stat-label">レベル</span><span class="stat-value" id="level">1</span></div>
+          <div class="stat"><span class="stat-label">ペア</span><span class="stat-value" id="pairs">0/6</span></div>
+          <div class="stat"><span class="stat-label">手数</span><span class="stat-value" id="moves">0</span></div>
+          <div class="stat"><span class="stat-label">時間</span><span class="stat-value" id="time">0:00</span></div>
+          <div class="stat"><span class="stat-label">ベスト</span><span class="stat-value" id="best">--</span></div>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="board" id="board" aria-live="polite"></div>
+      </div>
+
+      <div class="result" id="result" role="status" aria-live="polite">
+        <h2 id="resultTitle">全ペア発見！</h2>
+        <p id="resultText"></p>
+        <div class="result-actions">
+          <button class="icon-btn secondary" id="nextLevelBtn" type="button">↑ 次レベル</button>
+          <button class="icon-btn primary" id="playAgainBtn" type="button">↻ もう一回</button>
+          <button class="icon-btn secondary" id="copyBtn" type="button">□ 結果コピー</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const shorts = [
+      { id: "p01", name: "おぱんちゅ 01", src: "../assets/shorts/p01.png", color: "#ffd2ea" },
+      { id: "p02", name: "おぱんちゅ 02", src: "../assets/shorts/p02.png", color: "#d7f4ff" },
+      { id: "p03", name: "おぱんちゅ 03", src: "../assets/shorts/p03.png", color: "#fff1a8" },
+      { id: "p04", name: "おぱんちゅ 04", src: "../assets/shorts/p04.png", color: "#e3f0ff" },
+      { id: "p05", name: "おぱんちゅ 05", src: "../assets/shorts/p05.png", color: "#ffe0ef" },
+      { id: "p06", name: "おぱんちゅ 06", src: "../assets/shorts/p06.png", color: "#d8fff2" },
+      { id: "p07", name: "おぱんちゅ 07", src: "../assets/shorts/p07.png", color: "#ffefd5" },
+      { id: "p08", name: "おぱんちゅ 08", src: "../assets/shorts/p08.png", color: "#e9ddff" },
+      { id: "p09", name: "おぱんちゅ 09", src: "../assets/shorts/p09.png", color: "#d8f0ff" },
+      { id: "p10", name: "おぱんちゅ 10", src: "../assets/shorts/p10.png", color: "#fff6c9" },
+      { id: "p11", name: "おぱんちゅ 11", src: "../assets/shorts/p11.png", color: "#f0ffe2" },
+      { id: "p12", name: "おぱんちゅ 12", src: "../assets/shorts/p12.png", color: "#ffe0da" }
+    ];
+    const levels = [
+      { level: 1, pairs: 4, cols: 4, revealMs: 760, label: "入門" },
+      { level: 2, pairs: 6, cols: 4, revealMs: 680, label: "通常" },
+      { level: 3, pairs: 8, cols: 4, revealMs: 620, label: "集中" },
+      { level: 4, pairs: 10, cols: 5, revealMs: 560, label: "混乱" },
+      { level: 5, pairs: 12, cols: 6, revealMs: 500, label: "全部盛り" }
+    ];
+
+    const board = document.getElementById("board");
+    const levelEl = document.getElementById("level");
+    const pairsEl = document.getElementById("pairs");
+    const movesEl = document.getElementById("moves");
+    const timeEl = document.getElementById("time");
+    const bestEl = document.getElementById("best");
+    const result = document.getElementById("result");
+    const resultText = document.getElementById("resultText");
+    const toast = document.getElementById("toast");
+    const nextLevelBtn = document.getElementById("nextLevelBtn");
+    const bestKeyPrefix = "opanchu_memory_best_level_";
+
+    let deck = [];
+    let levelIndex = 0;
+    let levelConfig = levels[levelIndex];
+    let first = null;
+    let second = null;
+    let locked = false;
+    let moves = 0;
+    let matched = 0;
+    let startedAt = 0;
+    let timer = null;
+    let seconds = 0;
+
+    function shuffle(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function formatTime(value) {
+      const mins = Math.floor(value / 60);
+      const secs = String(value % 60).padStart(2, "0");
+      return `${mins}:${secs}`;
+    }
+
+    function readBest() {
+      const saved = localStorage.getItem(`${bestKeyPrefix}${levelConfig.level}`);
+      if (!saved) return null;
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+
+    function renderBest() {
+      const best = readBest();
+      bestEl.textContent = best ? `${best.moves}手` : "--";
+    }
+
+    function startTimer() {
+      if (timer) return;
+      startedAt = Date.now() - seconds * 1000;
+      timer = setInterval(() => {
+        seconds = Math.floor((Date.now() - startedAt) / 1000);
+        timeEl.textContent = formatTime(seconds);
+      }, 250);
+    }
+
+    function stopTimer() {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    function updateStats() {
+      levelEl.textContent = levelConfig.level;
+      pairsEl.textContent = `${matched}/${levelConfig.pairs}`;
+      movesEl.textContent = moves;
+      timeEl.textContent = formatTime(seconds);
+    }
+
+    function makeCard(item, index) {
+      const button = document.createElement("button");
+      button.className = "card";
+      button.type = "button";
+      button.dataset.id = item.id;
+      button.dataset.index = index;
+      button.setAttribute("aria-label", "伏せ札");
+      button.innerHTML = `
+        <span class="card-inner">
+          <span class="face back" aria-hidden="true">
+            <img class="takopan-cover" src="../assets/takopan-memory-card-final.png" alt="">
+            <span class="takopan-label">タコパン</span>
+          </span>
+          <span class="face front">
+            <span class="symbol" style="background:${item.color}">
+              <img class="shorts-img" src="${item.src}" alt="">
+            </span>
+            <span class="card-name">${item.name}</span>
+          </span>
+        </span>
+      `;
+      button.addEventListener("click", () => flip(button));
+      return button;
+    }
+
+    function setupGame() {
+      levelConfig = levels[levelIndex];
+      const levelCards = shuffle(shorts).slice(0, levelConfig.pairs);
+      deck = shuffle(levelCards.flatMap((item) => [item, item]));
+      first = null;
+      second = null;
+      locked = false;
+      moves = 0;
+      matched = 0;
+      seconds = 0;
+      stopTimer();
+      result.classList.remove("show");
+      board.style.setProperty("--board-cols", levelConfig.cols);
+      board.innerHTML = "";
+      deck.forEach((item, index) => board.appendChild(makeCard(item, index)));
+      updateStats();
+      renderBest();
+    }
+
+    function flip(card) {
+      if (locked || card === first || card.classList.contains("matched")) return;
+      startTimer();
+      card.classList.add("flipped");
+      card.setAttribute("aria-label", `${deck[Number(card.dataset.index)].name}の札`);
+
+      if (!first) {
+        first = card;
+        return;
+      }
+
+      second = card;
+      moves += 1;
+      updateStats();
+      checkPair();
+    }
+
+    function checkPair() {
+      const isMatch = first.dataset.id === second.dataset.id;
+      if (isMatch) {
+        first.classList.add("matched");
+        second.classList.add("matched");
+        first.disabled = true;
+        second.disabled = true;
+        matched += 1;
+        first = null;
+        second = null;
+        updateStats();
+        if (matched === levelConfig.pairs) finishGame();
+        return;
+      }
+
+      locked = true;
+      setTimeout(() => {
+        first.classList.remove("flipped");
+        second.classList.remove("flipped");
+        first.setAttribute("aria-label", "伏せ札");
+        second.setAttribute("aria-label", "伏せ札");
+        first = null;
+        second = null;
+        locked = false;
+      }, levelConfig.revealMs);
+    }
+
+    function finishGame() {
+      stopTimer();
+      const best = readBest();
+      const record = { moves, seconds };
+      const isBest = !best || moves < best.moves || (moves === best.moves && seconds < best.seconds);
+      if (isBest) localStorage.setItem(`${bestKeyPrefix}${levelConfig.level}`, JSON.stringify(record));
+      renderBest();
+      const perfectish = levelConfig.pairs + Math.ceil(levelConfig.pairs / 2);
+      const rank = moves <= perfectish ? "記憶力つよつよ" : moves <= perfectish + levelConfig.pairs ? "かなりいい感じ" : "じわじわ勝利";
+      const nextCopy = levelIndex < levels.length - 1 ? `次はLv${levels[levelIndex + 1].level}に進めます。` : "全レベル制覇です。";
+      nextLevelBtn.disabled = levelIndex >= levels.length - 1;
+      nextLevelBtn.textContent = levelIndex >= levels.length - 1 ? "✓ 制覇" : "↑ 次レベル";
+      resultText.textContent = `Lv${levelConfig.level} ${levelConfig.label}を${moves}手、${formatTime(seconds)}でクリア。判定は「${rank}」。${isBest ? "ベスト更新です。" : "次はベスト更新を狙えます。"} ${nextCopy}`;
+      result.classList.add("show");
+    }
+
+    async function copyResult() {
+      const text = `おぱんちゅ神経衰弱 Lv${levelConfig.level}を${moves}手・${formatTime(seconds)}でクリアしました。`;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("結果をコピーしました");
+      } catch {
+        showToast("コピーできませんでした");
+      }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", setupGame);
+    document.getElementById("playAgainBtn").addEventListener("click", setupGame);
+    nextLevelBtn.addEventListener("click", () => {
+      if (levelIndex >= levels.length - 1) return;
+      levelIndex += 1;
+      setupGame();
+      showToast(`Lv${levelConfig.level}へ進みました`);
+    });
+    document.getElementById("copyBtn").addEventListener("click", copyResult);
+    setupGame();
+  </script>
+</body>
+</html>

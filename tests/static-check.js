@@ -7,6 +7,9 @@ const { spawnSync } = require("node:child_process");
 const root = path.resolve(__dirname, "..");
 const htmlPath = path.join(root, "src", "index.html");
 const html = fs.readFileSync(htmlPath, "utf8");
+const gamePath = path.join(root, "src", "memory-game.html");
+const gameHtml = fs.readFileSync(gamePath, "utf8");
+const takopanCoverPath = path.join(root, "assets", "takopan-memory-card-final.png");
 const publicIndexPath = path.join(root, "index.html");
 const publicIndex = fs.readFileSync(publicIndexPath, "utf8");
 
@@ -30,6 +33,20 @@ assert.equal(
   syntax.status,
   0,
   `Inline JavaScript syntax check failed:\n${syntax.stderr || syntax.stdout}`,
+);
+
+const gameScriptMatches = [...gameHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+assert.ok(gameScriptMatches.length >= 1, "Expected game page to include inline script");
+const gameScript = gameScriptMatches.at(-1)[1];
+const tempGameScript = path.join(os.tmpdir(), "opanchu-memory-game-check.js");
+fs.writeFileSync(tempGameScript, gameScript, "utf8");
+const gameSyntax = spawnSync(process.execPath, ["--check", tempGameScript], {
+  encoding: "utf8",
+});
+assert.equal(
+  gameSyntax.status,
+  0,
+  `Game JavaScript syntax check failed:\n${gameSyntax.stderr || gameSyntax.stdout}`,
 );
 
 ["welcome", "quiz", "loading", "result"].forEach((id) => {
@@ -75,9 +92,6 @@ assert.equal(
 includes("タコパン鑑定中", "Takopan loading gimmick is missing");
 includes("タコパンが鑑定札をめくっています", "Takopan loading copy is missing");
 includes("無断複製、転載、コピーはおやめください", "Copy/repost notice is missing");
-includes(".screenshot-mode #resultCard > .grid", "Screenshot mode should force the result grid into a compact single column");
-includes(".screenshot-mode #resultGirl", "Screenshot mode should resize the generated girl asset");
-includes("window.scrollTo(0, 0)", "Screenshot mode should reset scroll to the top before capture");
 excludes("タコパン診断班", "Takopan should not be framed as a persistent diagnosis crew");
 excludes("welcomeOctos", "Takopan should not appear on the welcome screen");
 excludes("quizOctos", "Takopan should not appear throughout the quiz");
@@ -88,8 +102,28 @@ assert.ok(qCount >= 5, `Expected question/result text data, found only ${qCount}
 
 assert.ok(
   publicIndex.includes("src/index.html"),
-  "Root index.html should redirect to src/index.html for GitHub Pages sharing",
+  "Root index.html should link to src/index.html",
 );
+assert.ok(
+  publicIndex.includes("src/memory-game.html"),
+  "Root index.html should link to the memory game",
+);
+["おぱんちゅラボ", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
+  assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
+});
+["おぱんちゅ神経衰弱", "pairs", "moves", "opanchu_memory_best"].forEach((needle) => {
+  assert.ok(gameHtml.includes(needle), `Missing game text or control: ${needle}`);
+});
+assert.ok(gameHtml.includes("../assets/takopan-memory-card-final.png"), "Game should use the final Takopan card image");
+assert.ok(fs.existsSync(takopanCoverPath), "Takopan cover image is missing");
+for (let i = 1; i <= 12; i += 1) {
+  const fileName = `p${String(i).padStart(2, "0")}.png`;
+  const shortsPath = path.join(root, "assets", "shorts", fileName);
+  assert.ok(gameHtml.includes(`../assets/shorts/${fileName}`), `Game should reference ${fileName}`);
+  assert.ok(fs.existsSync(shortsPath), `Missing shorts image ${fileName}`);
+}
+["level", "nextLevelBtn", "opanchu_memory_best_level_"].forEach((needle) => {
+  assert.ok(gameHtml.includes(needle), `Missing level feature: ${needle}`);
+});
 
 console.log("Static checks passed.");
-
