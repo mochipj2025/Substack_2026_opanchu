@@ -11,6 +11,8 @@ const srcIndexPath = path.join(root, "src", "index.html");
 const srcIndex = fs.readFileSync(srcIndexPath, "utf8");
 const gamePath = path.join(root, "src", "memory-game.html");
 const gameHtml = fs.readFileSync(gamePath, "utf8");
+const mergePath = path.join(root, "src", "merge-game.html");
+const mergeHtml = fs.readFileSync(mergePath, "utf8");
 const takopanCoverPath = path.join(root, "assets", "takopan-memory-card-final.png");
 const publicIndexPath = path.join(root, "index.html");
 const publicIndex = fs.readFileSync(publicIndexPath, "utf8");
@@ -49,6 +51,20 @@ assert.equal(
   gameSyntax.status,
   0,
   `Game JavaScript syntax check failed:\n${gameSyntax.stderr || gameSyntax.stdout}`,
+);
+
+const mergeScriptMatches = [...mergeHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+assert.ok(mergeScriptMatches.length >= 1, "Expected merge page to include inline script");
+const mergeScript = mergeScriptMatches.at(-1)[1];
+const tempMergeScript = path.join(os.tmpdir(), "opanchu-merge-game-check.js");
+fs.writeFileSync(tempMergeScript, mergeScript, "utf8");
+const mergeSyntax = spawnSync(process.execPath, ["--check", tempMergeScript], {
+  encoding: "utf8",
+});
+assert.equal(
+  mergeSyntax.status,
+  0,
+  `Merge JavaScript syntax check failed:\n${mergeSyntax.stderr || mergeSyntax.stdout}`,
 );
 
 ["welcome", "quiz", "loading", "result"].forEach((id) => {
@@ -110,6 +126,10 @@ assert.ok(
   publicIndex.includes("src/memory-game.html"),
   "Root index.html should link to the memory game",
 );
+assert.ok(
+  publicIndex.includes("src/merge-game.html"),
+  "Root index.html should link to the merge game",
+);
 ["おぱんちゅラボ", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
 });
@@ -117,7 +137,7 @@ assert.ok(
   assert.ok(publicIndex.includes(`asset/generated-types/${fileName}`), `Root index should reference ${fileName}`);
 });
 assert.ok(srcIndex.includes("../index.html"), "src/index.html should redirect to the portal");
-["このURLは", "診断を直接開く", "memory-game.html"].forEach((needle) => {
+["このURLは", "診断を直接開く", "memory-game.html", "merge-game.html"].forEach((needle) => {
   assert.ok(srcIndex.includes(needle), `src/index.html should explain the moved URL: ${needle}`);
 });
 ["おぱんちゅ神経衰弱", "pairs", "moves", "opanchu_memory_best"].forEach((needle) => {
@@ -134,5 +154,12 @@ for (let i = 1; i <= 12; i += 1) {
 ["level", "nextLevelBtn", "opanchu_memory_best_level_"].forEach((needle) => {
   assert.ok(gameHtml.includes(needle), `Missing level feature: ${needle}`);
 });
+["おぱんちゅマージ", "opanchu_merge_best", "ArrowLeft", "touchstart"].forEach((needle) => {
+  assert.ok(mergeHtml.includes(needle), `Missing merge game feature: ${needle}`);
+});
+for (let i = 1; i <= 12; i += 1) {
+  const fileName = `p${String(i).padStart(2, "0")}.png`;
+  assert.ok(mergeHtml.includes(`../assets/shorts/${fileName}`), `Merge game should reference ${fileName}`);
+}
 
 console.log("Static checks passed.");
