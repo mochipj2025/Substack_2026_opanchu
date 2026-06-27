@@ -75,6 +75,9 @@ assert.equal(
 includes("タコパン鑑定中", "Takopan loading gimmick is missing");
 includes("タコパンが鑑定札をめくっています", "Takopan loading copy is missing");
 includes("無断複製、転載、コピーはおやめください", "Copy/repost notice is missing");
+includes(".screenshot-mode #resultCard > .grid", "Screenshot mode should force the result grid into a compact single column");
+includes(".screenshot-mode #resultGirl", "Screenshot mode should resize the generated girl asset");
+includes("window.scrollTo(0, 0)", "Screenshot mode should reset scroll to the top before capture");
 excludes("タコパン診断班", "Takopan should not be framed as a persistent diagnosis crew");
 excludes("welcomeOctos", "Takopan should not appear on the welcome screen");
 excludes("quizOctos", "Takopan should not appear throughout the quiz");
@@ -89,3 +92,4 @@ assert.ok(
 );
 
 console.log("Static checks passed.");
+
