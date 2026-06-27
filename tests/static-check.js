@@ -114,6 +114,9 @@ assert.ok(
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
 });
 assert.ok(srcIndex.includes("../index.html"), "src/index.html should redirect to the portal");
+["このURLは", "診断を直接開く", "memory-game.html"].forEach((needle) => {
+  assert.ok(srcIndex.includes(needle), `src/index.html should explain the moved URL: ${needle}`);
+});
 ["おぱんちゅ神経衰弱", "pairs", "moves", "opanchu_memory_best"].forEach((needle) => {
   assert.ok(gameHtml.includes(needle), `Missing game text or control: ${needle}`);
 });
