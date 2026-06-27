@@ -7,6 +7,8 @@ const { spawnSync } = require("node:child_process");
 const root = path.resolve(__dirname, "..");
 const htmlPath = path.join(root, "src", "index.html");
 const html = fs.readFileSync(htmlPath, "utf8");
+const publicIndexPath = path.join(root, "index.html");
+const publicIndex = fs.readFileSync(publicIndexPath, "utf8");
 
 function includes(text, message) {
   assert.ok(html.includes(text), message || `Expected HTML to include ${text}`);
@@ -80,5 +82,10 @@ excludes("judgeOctos", "Takopan should not appear in the result panel");
 
 const qCount = (appScript.match(/\btext: '/g) || []).length;
 assert.ok(qCount >= 5, `Expected question/result text data, found only ${qCount} text entries`);
+
+assert.ok(
+  publicIndex.includes("src/index.html"),
+  "Root index.html should redirect to src/index.html for GitHub Pages sharing",
+);
 
 console.log("Static checks passed.");

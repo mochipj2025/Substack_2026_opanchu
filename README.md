@@ -22,6 +22,18 @@ cd "D:\00000\M.O.C.H.I. LABO_Vault\おぱんちゅPJ\src"
 python -m http.server 8124 --bind 127.0.0.1
 ```
 
+## 共有方法
+
+他の人に共有する場合は、GitHub Pagesで公開するのが簡単です。
+
+1. GitHubのリポジトリ設定を開く
+2. `Settings` -> `Pages`
+3. `Build and deployment` の `Source` を `Deploy from a branch` にする
+4. `Branch` を `main`、フォルダを `/ (root)` にする
+5. 保存後、表示されるPages URLを共有する
+
+リポジトリ直下の `index.html` は公開用の入口で、実体の `src/index.html` に自動で移動します。
+
 ## テスト
 
 外部依存なしで、HTML構成とインラインJavaScript構文を確認します。
