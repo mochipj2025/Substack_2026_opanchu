@@ -72,6 +72,7 @@ assert.equal(
 // Takopan should be a just-in-time loading gimmick, not a persistent guide.
 includes("タコパン鑑定中", "Takopan loading gimmick is missing");
 includes("タコパンが鑑定札をめくっています", "Takopan loading copy is missing");
+includes("無断複製、転載、コピーはおやめください", "Copy/repost notice is missing");
 excludes("タコパン診断班", "Takopan should not be framed as a persistent diagnosis crew");
 excludes("welcomeOctos", "Takopan should not appear on the welcome screen");
 excludes("quizOctos", "Takopan should not appear throughout the quiz");
