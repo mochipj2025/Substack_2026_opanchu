@@ -1,0 +1,800 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>おぱんちゅお片づけパズル</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #111;
+      --pink: #ff67b3;
+      --yellow: #ffe66f;
+      --mint: #35ffd4;
+      --blue: #7dd7ff;
+      --paper: #fffaf0;
+      --shadow: 6px 6px 0 var(--ink);
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+      background:
+        linear-gradient(rgba(17, 17, 17, .07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 17, 17, .07) 1px, transparent 1px),
+        linear-gradient(135deg, var(--yellow), #ff98ca 46%, var(--mint));
+      background-size: 22px 22px, 22px 22px, auto;
+    }
+    button, a { color: inherit; font: inherit; }
+    main {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .brand, .icon-btn, .panel, .stat, .mission-card {
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .brand {
+      padding: 10px 14px;
+      font-weight: 1000;
+      line-height: 1.1;
+    }
+    .brand span {
+      display: block;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+    .icon-btn {
+      display: grid;
+      place-items: center;
+      min-width: 48px;
+      min-height: 48px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 8px 12px;
+      text-decoration: none;
+      font-weight: 1000;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .icon-btn:active {
+      transform: translate(4px, 4px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+    .panel {
+      overflow: hidden;
+      background: var(--paper);
+    }
+    .game-head {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 4px solid var(--ink);
+      background: var(--blue);
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(32px, 7vw, 64px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 8px 0 0;
+      max-width: 760px;
+      font-weight: 900;
+      line-height: 1.55;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .stat {
+      min-width: 0;
+      padding: 9px;
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--ink);
+    }
+    .stat-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .stat-value {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+    .play-area {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 14px;
+      padding: 14px;
+    }
+    .board-wrap {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(var(--board-cols, 8), minmax(0, 1fr));
+      gap: 7px;
+      width: min(690px, 100%);
+      margin: 0 auto;
+      padding: 10px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: #fff4ce;
+      box-shadow: 5px 5px 0 var(--ink);
+      touch-action: manipulation;
+    }
+    .tile {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      padding: 5px;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 rgba(17, 17, 17, .25);
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+    }
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 0 rgba(17, 17, 17, .16));
+      pointer-events: none;
+    }
+    .tile.selected {
+      z-index: 2;
+      background: #fff1a0;
+      transform: translateY(-4px);
+      box-shadow: 3px 7px 0 rgba(17, 17, 17, .25);
+    }
+    .tile.hint {
+      animation: hint .72s ease-in-out infinite alternate;
+    }
+    .tile.falling {
+      animation: fall-in .34s cubic-bezier(.2, .9, .28, 1.18) both;
+      animation-delay: var(--delay, 0ms);
+    }
+    .tile.clearing {
+      transform: scale(.2) rotate(12deg);
+      filter: saturate(1.6);
+      opacity: 0;
+    }
+    .message {
+      min-height: 52px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 11px 12px;
+      font-weight: 1000;
+      line-height: 1.35;
+    }
+    .side {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      min-width: 0;
+    }
+    .mission-card {
+      padding: 12px;
+      box-shadow: 5px 5px 0 var(--ink);
+    }
+    .mission-card h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+    .targets {
+      display: grid;
+      gap: 8px;
+    }
+    .target {
+      display: grid;
+      grid-template-columns: 54px 1fr;
+      gap: 10px;
+      align-items: center;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: #fff9dc;
+      padding: 6px;
+      font-weight: 1000;
+    }
+    .target img {
+      width: 54px;
+      aspect-ratio: 1 / 1;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      object-fit: contain;
+      padding: 3px;
+    }
+    .target small {
+      display: block;
+      margin-top: 3px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .target.done {
+      background: #d9fff4;
+    }
+    .wide-btn {
+      width: 100%;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: var(--yellow);
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 12px;
+      font-weight: 1000;
+      cursor: pointer;
+    }
+    .wide-btn + .wide-btn {
+      margin-top: 8px;
+      background: white;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      width: min(340px, calc(100% - 24px));
+      transform: translate(-50%, 20px);
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 12px;
+      text-align: center;
+      font-weight: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+    @keyframes hint {
+      from { transform: translateY(0); }
+      to { transform: translateY(-5px); }
+    }
+    @keyframes fall-in {
+      0% {
+        transform: translateY(var(--drop, -120%)) scale(.92);
+        opacity: .45;
+      }
+      72% {
+        transform: translateY(7px) scale(1.03);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+    @media (max-width: 840px) {
+      .play-area {
+        grid-template-columns: 1fr;
+      }
+      .side {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 620px) {
+      main { padding: 12px; }
+      .topbar { display: grid; }
+      .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .play-area { padding: 10px; }
+      .board {
+        gap: 4px;
+        padding: 6px;
+      }
+      .tile {
+        border-width: 3px;
+        padding: 3px;
+      }
+      .side {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="topbar" aria-label="ゲームナビゲーション">
+      <a class="brand" href="../index.html">おぱんちゅラボ<span>OPANCHU MATCH</span></a>
+      <div class="actions">
+        <a class="icon-btn" href="../index.html" aria-label="入口へ戻る">←</a>
+        <button class="icon-btn" id="resetBtn" type="button" aria-label="最初から">↻</button>
+      </div>
+    </nav>
+
+    <section class="panel" aria-label="おぱんちゅお片づけパズル">
+      <div class="game-head">
+        <div>
+          <h1>おぱんちゅ<br>お片づけパズル</h1>
+          <p class="lead">隣の札と入れ替えて3つ以上そろえる、ホームスケイプ風の10ステージ制パズル。ターゲットを全部片づけるとクリアです。</p>
+        </div>
+        <div class="stats" aria-label="成績">
+          <div class="stat"><span class="stat-label">STAGE</span><span class="stat-value" id="stage">1</span></div>
+          <div class="stat"><span class="stat-label">MOVES</span><span class="stat-value" id="moves">24</span></div>
+          <div class="stat"><span class="stat-label">SCORE</span><span class="stat-value" id="score">0</span></div>
+          <div class="stat"><span class="stat-label">CHAIN</span><span class="stat-value" id="chain">0</span></div>
+          <div class="stat"><span class="stat-label">BEST</span><span class="stat-value" id="best">0</span></div>
+        </div>
+      </div>
+
+      <div class="play-area">
+        <div class="board-wrap">
+          <div class="board" id="board" aria-label="パズル盤面"></div>
+          <div class="message" id="message">隣り合う札を2つ選んで入れ替えます。</div>
+        </div>
+        <aside class="side" aria-label="ミッション">
+          <div class="mission-card">
+            <h2 id="stageTitle">ステージ1</h2>
+            <div class="targets" id="targets"></div>
+          </div>
+          <div class="mission-card">
+            <h2>操作</h2>
+            <button class="wide-btn" id="nextStageBtn" type="button">次のステージへ</button>
+            <button class="wide-btn" id="hintBtn" type="button">そろう場所を光らせる</button>
+            <button class="wide-btn" id="copyBtn" type="button">結果コピー</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const tileTypes = [
+      { id: "p01", name: "おぱんちゅ 01", src: "../assets/shorts/p01.png", color: "#ffd2ea" },
+      { id: "p02", name: "おぱんちゅ 02", src: "../assets/shorts/p02.png", color: "#d7f4ff" },
+      { id: "p03", name: "おぱんちゅ 03", src: "../assets/shorts/p03.png", color: "#fff1a8" },
+      { id: "p04", name: "おぱんちゅ 04", src: "../assets/shorts/p04.png", color: "#e3f0ff" },
+      { id: "p05", name: "おぱんちゅ 05", src: "../assets/shorts/p05.png", color: "#ffe0ef" },
+      { id: "p06", name: "おぱんちゅ 06", src: "../assets/shorts/p06.png", color: "#d8fff2" },
+      { id: "p07", name: "おぱんちゅ 07", src: "../assets/shorts/p07.png", color: "#ffefd5" },
+      { id: "p08", name: "おぱんちゅ 08", src: "../assets/shorts/p08.png", color: "#e9ddff" }
+    ];
+    const stages = [
+      { stage: 1, rows: 5, cols: 5, moves: 18, types: 4, goals: [4], label: "まずは片づけ" },
+      { stage: 2, rows: 5, cols: 6, moves: 19, types: 4, goals: [4, 4], label: "横にひろがる" },
+      { stage: 3, rows: 6, cols: 6, moves: 20, types: 5, goals: [5, 4], label: "札ふえます" },
+      { stage: 4, rows: 6, cols: 7, moves: 21, types: 5, goals: [5, 5, 4], label: "3種ミッション" },
+      { stage: 5, rows: 7, cols: 7, moves: 22, types: 6, goals: [6, 5, 4], label: "中盤の山" },
+      { stage: 6, rows: 7, cols: 8, moves: 23, types: 6, goals: [6, 6, 5], label: "盤面ひろめ" },
+      { stage: 7, rows: 8, cols: 8, moves: 24, types: 7, goals: [7, 6, 5], label: "手数管理" },
+      { stage: 8, rows: 8, cols: 8, moves: 23, types: 7, goals: [7, 6, 5, 4], label: "4種回収" },
+      { stage: 9, rows: 8, cols: 8, moves: 22, types: 8, goals: [8, 7, 5, 4], label: "終盤チェック" },
+      { stage: 10, rows: 8, cols: 8, moves: 21, types: 8, goals: [9, 7, 6, 4], label: "最終お片づけ" }
+    ];
+    const bestKeyPrefix = "opanchu_match3_best_stage_";
+    const boardEl = document.getElementById("board");
+    const stageEl = document.getElementById("stage");
+    const movesEl = document.getElementById("moves");
+    const scoreEl = document.getElementById("score");
+    const chainEl = document.getElementById("chain");
+    const bestEl = document.getElementById("best");
+    const stageTitleEl = document.getElementById("stageTitle");
+    const targetsEl = document.getElementById("targets");
+    const messageEl = document.getElementById("message");
+    const toastEl = document.getElementById("toast");
+    const nextStageBtn = document.getElementById("nextStageBtn");
+    let board = [];
+    let selected = null;
+    let currentStageIndex = 0;
+    let stageConfig = stages[currentStageIndex];
+    let moves = stageConfig.moves;
+    let score = 0;
+    let chain = 0;
+    let locked = false;
+    let hintIndexes = [];
+    let targets = [];
+    let gameOver = false;
+    let fallEffects = {};
+
+    function indexOf(row, col) {
+      return row * stageConfig.cols + col;
+    }
+
+    function boardCount() {
+      return stageConfig.rows * stageConfig.cols;
+    }
+
+    function randomType(preferTargets = false) {
+      if (preferTargets) {
+        const activeTargets = targets.filter((target) => target.collected < target.needed);
+        if (activeTargets.length && Math.random() < .62) {
+          return activeTargets[Math.floor(Math.random() * activeTargets.length)].typeIndex;
+        }
+      }
+      return Math.floor(Math.random() * stageConfig.types);
+    }
+
+    function createTargets() {
+      const shuffled = tileTypes.slice(0, stageConfig.types).sort(() => Math.random() - .5).slice(0, stageConfig.goals.length);
+      return shuffled.map((type, index) => ({
+        id: type.id,
+        typeIndex: tileTypes.indexOf(type),
+        needed: stageConfig.goals[index],
+        collected: 0
+      }));
+    }
+
+    function setup() {
+      stageConfig = stages[currentStageIndex];
+      selected = null;
+      moves = stageConfig.moves;
+      score = 0;
+      chain = 0;
+      locked = false;
+      hintIndexes = [];
+      fallEffects = {};
+      targets = createTargets();
+      gameOver = false;
+      do {
+        board = Array(boardCount()).fill(null);
+        for (let row = 0; row < stageConfig.rows; row += 1) {
+          for (let col = 0; col < stageConfig.cols; col += 1) {
+            let type = randomType();
+            while (wouldCreateMatch(row, col, type)) type = randomType();
+            board[indexOf(row, col)] = type;
+          }
+        }
+      } while (!findPossibleMove().length);
+      setMessage(`ステージ${stageConfig.stage}「${stageConfig.label}」。${moves}手以内にターゲット回収。`);
+      render();
+    }
+
+    function wouldCreateMatch(row, col, type) {
+      const left1 = col >= 1 ? board[indexOf(row, col - 1)] : null;
+      const left2 = col >= 2 ? board[indexOf(row, col - 2)] : null;
+      const up1 = row >= 1 ? board[indexOf(row - 1, col)] : null;
+      const up2 = row >= 2 ? board[indexOf(row - 2, col)] : null;
+      return (left1 === type && left2 === type) || (up1 === type && up2 === type);
+    }
+
+    function render() {
+      boardEl.innerHTML = "";
+      boardEl.style.setProperty("--board-cols", stageConfig.cols);
+      boardEl.style.maxWidth = `${Math.min(690, stageConfig.cols * 82 + 40)}px`;
+      board.forEach((typeIndex, index) => {
+        const type = tileTypes[typeIndex];
+        const button = document.createElement("button");
+        const fall = fallEffects[index];
+        button.className = `tile ${selected === index ? "selected" : ""} ${hintIndexes.includes(index) ? "hint" : ""} ${fall ? "falling" : ""}`;
+        button.type = "button";
+        button.dataset.index = index;
+        button.style.background = type.color;
+        if (fall) {
+          button.style.setProperty("--drop", `-${Math.max(fall.distance, 1) * 105}%`);
+          button.style.setProperty("--delay", `${fall.delay}ms`);
+        }
+        button.setAttribute("aria-label", `${type.name}の札`);
+        button.innerHTML = `<img src="${type.src}" alt="">`;
+        button.addEventListener("click", () => chooseTile(index));
+        boardEl.appendChild(button);
+      });
+      movesEl.textContent = moves;
+      scoreEl.textContent = score;
+      chainEl.textContent = chain;
+      stageEl.textContent = stageConfig.stage;
+      bestEl.textContent = localStorage.getItem(`${bestKeyPrefix}${stageConfig.stage}`) || "0";
+      stageTitleEl.textContent = `ステージ${stageConfig.stage} / 10`;
+      nextStageBtn.disabled = !(gameOver && targets.every((target) => target.collected >= target.needed) && currentStageIndex < stages.length - 1);
+      nextStageBtn.textContent = currentStageIndex >= stages.length - 1 ? "全ステージ制覇" : "次のステージへ";
+      targetsEl.innerHTML = targets.map((target) => {
+        const type = tileTypes[target.typeIndex];
+        const done = target.collected >= target.needed;
+        return `
+          <div class="target ${done ? "done" : ""}">
+            <img src="${type.src}" alt="">
+            <span>${type.name}<small>${Math.min(target.collected, target.needed)} / ${target.needed}</small></span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function chooseTile(index) {
+      if (locked || gameOver) return;
+      hintIndexes = [];
+      if (selected === null) {
+        selected = index;
+        setMessage("入れ替える隣の札を選んでください。");
+        render();
+        return;
+      }
+      if (selected === index) {
+        selected = null;
+        setMessage("選択を解除しました。");
+        render();
+        return;
+      }
+      if (!isNeighbor(selected, index)) {
+        selected = index;
+        setMessage("隣同士だけ入れ替えできます。");
+        render();
+        return;
+      }
+      attemptSwap(selected, index);
+    }
+
+    function isNeighbor(first, second) {
+      const rowA = Math.floor(first / stageConfig.cols);
+      const colA = first % stageConfig.cols;
+      const rowB = Math.floor(second / stageConfig.cols);
+      const colB = second % stageConfig.cols;
+      return Math.abs(rowA - rowB) + Math.abs(colA - colB) === 1;
+    }
+
+    async function attemptSwap(first, second) {
+      locked = true;
+      swap(first, second);
+      selected = null;
+      render();
+      await wait(120);
+      const matches = findMatches();
+      if (!matches.length) {
+        swap(first, second);
+        setMessage("そこはそろいません。別の入れ替えを試そう。");
+        locked = false;
+        render();
+        return;
+      }
+      moves -= 1;
+      chain = 0;
+      await resolveBoard(matches);
+      finishTurn();
+    }
+
+    function swap(first, second) {
+      [board[first], board[second]] = [board[second], board[first]];
+    }
+
+    function findMatches() {
+      const matched = new Set();
+      for (let row = 0; row < stageConfig.rows; row += 1) {
+        let runStart = 0;
+        for (let col = 1; col <= stageConfig.cols; col += 1) {
+          const current = col < stageConfig.cols ? board[indexOf(row, col)] : null;
+          const previous = board[indexOf(row, col - 1)];
+          if (current !== previous) {
+            if (col - runStart >= 3) {
+              for (let x = runStart; x < col; x += 1) matched.add(indexOf(row, x));
+            }
+            runStart = col;
+          }
+        }
+      }
+      for (let col = 0; col < stageConfig.cols; col += 1) {
+        let runStart = 0;
+        for (let row = 1; row <= stageConfig.rows; row += 1) {
+          const current = row < stageConfig.rows ? board[indexOf(row, col)] : null;
+          const previous = board[indexOf(row - 1, col)];
+          if (current !== previous) {
+            if (row - runStart >= 3) {
+              for (let y = runStart; y < row; y += 1) matched.add(indexOf(y, col));
+            }
+            runStart = row;
+          }
+        }
+      }
+      return [...matched];
+    }
+
+    async function resolveBoard(matches) {
+      let currentMatches = matches;
+      while (currentMatches.length) {
+        chain += 1;
+        collect(currentMatches);
+        score += currentMatches.length * 40 * chain;
+        markClearing(currentMatches);
+        renderStatsOnly();
+        await wait(180);
+        currentMatches.forEach((index) => board[index] = null);
+        applyGravity();
+        render();
+        await wait(360);
+        fallEffects = {};
+        currentMatches = findMatches();
+      }
+    }
+
+    function markClearing(indexes) {
+      indexes.forEach((index) => {
+        const tile = boardEl.querySelector(`[data-index="${index}"]`);
+        if (tile) tile.classList.add("clearing");
+      });
+    }
+
+    function renderStatsOnly() {
+      scoreEl.textContent = score;
+      chainEl.textContent = chain;
+      targetsEl.innerHTML = targets.map((target) => {
+        const type = tileTypes[target.typeIndex];
+        const done = target.collected >= target.needed;
+        return `
+          <div class="target ${done ? "done" : ""}">
+            <img src="${type.src}" alt="">
+            <span>${type.name}<small>${Math.min(target.collected, target.needed)} / ${target.needed}</small></span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function collect(indexes) {
+      indexes.forEach((index) => {
+        const typeIndex = board[index];
+        const target = targets.find((item) => item.typeIndex === typeIndex);
+        if (target && target.collected < target.needed) target.collected += 1;
+      });
+    }
+
+    function applyGravity() {
+      const nextBoard = Array(boardCount()).fill(null);
+      const nextEffects = {};
+      for (let col = 0; col < stageConfig.cols; col += 1) {
+        let writeRow = stageConfig.rows - 1;
+        for (let row = stageConfig.rows - 1; row >= 0; row -= 1) {
+          const sourceIndex = indexOf(row, col);
+          const value = board[sourceIndex];
+          if (value === null) continue;
+          const targetIndex = indexOf(writeRow, col);
+          nextBoard[targetIndex] = value;
+          if (writeRow !== row) {
+            nextEffects[targetIndex] = {
+              distance: writeRow - row,
+              delay: col * 14
+            };
+          }
+          writeRow -= 1;
+        }
+        for (let row = writeRow; row >= 0; row -= 1) {
+          const targetIndex = indexOf(row, col);
+          nextBoard[targetIndex] = randomType(true);
+          nextEffects[targetIndex] = {
+            distance: row + 2,
+            delay: col * 14 + (writeRow - row) * 26
+          };
+        }
+      }
+      board = nextBoard;
+      fallEffects = nextEffects;
+    }
+
+    function finishTurn() {
+      locked = false;
+      selected = null;
+      const cleared = targets.every((target) => target.collected >= target.needed);
+      if (cleared) {
+        gameOver = true;
+        const bestKey = `${bestKeyPrefix}${stageConfig.stage}`;
+        const best = Math.max(Number(localStorage.getItem(bestKey) || 0), score);
+        localStorage.setItem(bestKey, String(best));
+        const nextCopy = currentStageIndex < stages.length - 1 ? "次のステージへ進めます。" : "10ステージ完全制覇です。";
+        setMessage(`ステージ${stageConfig.stage}クリア。${score}点、残り${moves}手。${nextCopy}`);
+        showToast(currentStageIndex < stages.length - 1 ? "ステージクリア" : "全ステージ制覇");
+      } else if (moves <= 0) {
+        gameOver = true;
+        setMessage(`ステージ${stageConfig.stage}は手数切れ。↻で同じステージをやり直そう。`);
+      } else {
+        if (!findPossibleMove().length) {
+          refillBoard();
+          setMessage("入れ替え候補がなくなったので、盤面を補充し直しました。");
+        } else {
+          setMessage(chain >= 2 ? `${chain}連鎖。次の入れ替えへ。` : "ナイス回収。次の入れ替えへ。");
+        }
+      }
+      render();
+    }
+
+    function refillBoard() {
+      fallEffects = {};
+      do {
+        board = Array(boardCount()).fill(null);
+        for (let row = 0; row < stageConfig.rows; row += 1) {
+          for (let col = 0; col < stageConfig.cols; col += 1) {
+            let type = randomType(true);
+            while (wouldCreateMatch(row, col, type)) type = randomType(true);
+            board[indexOf(row, col)] = type;
+          }
+        }
+      } while (!findPossibleMove().length);
+    }
+
+    function findPossibleMove() {
+      for (let index = 0; index < board.length; index += 1) {
+        const row = Math.floor(index / stageConfig.cols);
+        const col = index % stageConfig.cols;
+        const candidates = [];
+        if (col < stageConfig.cols - 1) candidates.push(index + 1);
+        if (row < stageConfig.rows - 1) candidates.push(index + stageConfig.cols);
+        for (const other of candidates) {
+          swap(index, other);
+          const hasMatch = findMatches().length > 0;
+          swap(index, other);
+          if (hasMatch) return [index, other];
+        }
+      }
+      return [];
+    }
+
+    function showHint() {
+      if (locked || gameOver) return;
+      const move = findPossibleMove();
+      hintIndexes = move;
+      selected = null;
+      setMessage(move.length ? "光っている2枚を入れ替えるとそろいます。" : "今は有効な入れ替えがありません。盤面を作り直します。");
+      if (!move.length) setup();
+      render();
+    }
+
+    async function copyResult() {
+      const cleared = targets.every((target) => target.collected >= target.needed);
+      const text = `おぱんちゅお片づけパズル ステージ${stageConfig.stage}で${score}点。${cleared ? "ターゲット達成" : `残り${moves}手`}でした。`;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("結果をコピーしました");
+      } catch {
+        showToast("コピーできませんでした");
+      }
+    }
+
+    function setMessage(text) {
+      messageEl.textContent = text;
+    }
+
+    function showToast(message) {
+      toastEl.textContent = message;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 1400);
+    }
+
+    function wait(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    document.getElementById("resetBtn").addEventListener("click", setup);
+    nextStageBtn.addEventListener("click", () => {
+      const cleared = targets.every((target) => target.collected >= target.needed);
+      if (!gameOver || !cleared || currentStageIndex >= stages.length - 1) return;
+      currentStageIndex += 1;
+      setup();
+      showToast(`ステージ${stageConfig.stage}開始`);
+    });
+    document.getElementById("hintBtn").addEventListener("click", showHint);
+    document.getElementById("copyBtn").addEventListener("click", copyResult);
+    setup();
+  </script>
+</body>
+</html>

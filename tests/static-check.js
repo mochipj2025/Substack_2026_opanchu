@@ -13,6 +13,12 @@ const gamePath = path.join(root, "src", "memory-game.html");
 const gameHtml = fs.readFileSync(gamePath, "utf8");
 const mergePath = path.join(root, "src", "merge-game.html");
 const mergeHtml = fs.readFileSync(mergePath, "utf8");
+const match3Path = path.join(root, "src", "match3-game.html");
+const match3Html = fs.readFileSync(match3Path, "utf8");
+const battlePath = path.join(root, "src", "battle-game.html");
+const battleHtml = fs.readFileSync(battlePath, "utf8");
+const omikujiPath = path.join(root, "src", "omikuji-game.html");
+const omikujiHtml = fs.readFileSync(omikujiPath, "utf8");
 const takopanCoverPath = path.join(root, "assets", "takopan-memory-card-final.png");
 const publicIndexPath = path.join(root, "index.html");
 const publicIndex = fs.readFileSync(publicIndexPath, "utf8");
@@ -67,6 +73,48 @@ assert.equal(
   `Merge JavaScript syntax check failed:\n${mergeSyntax.stderr || mergeSyntax.stdout}`,
 );
 
+const match3ScriptMatches = [...match3Html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+assert.ok(match3ScriptMatches.length >= 1, "Expected match3 page to include inline script");
+const match3Script = match3ScriptMatches.at(-1)[1];
+const tempMatch3Script = path.join(os.tmpdir(), "opanchu-match3-game-check.js");
+fs.writeFileSync(tempMatch3Script, match3Script, "utf8");
+const match3Syntax = spawnSync(process.execPath, ["--check", tempMatch3Script], {
+  encoding: "utf8",
+});
+assert.equal(
+  match3Syntax.status,
+  0,
+  `Match3 JavaScript syntax check failed:\n${match3Syntax.stderr || match3Syntax.stdout}`,
+);
+
+const battleScriptMatches = [...battleHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+assert.ok(battleScriptMatches.length >= 1, "Expected battle page to include inline script");
+const battleScript = battleScriptMatches.at(-1)[1];
+const tempBattleScript = path.join(os.tmpdir(), "opanchu-battle-game-check.js");
+fs.writeFileSync(tempBattleScript, battleScript, "utf8");
+const battleSyntax = spawnSync(process.execPath, ["--check", tempBattleScript], {
+  encoding: "utf8",
+});
+assert.equal(
+  battleSyntax.status,
+  0,
+  `Battle JavaScript syntax check failed:\n${battleSyntax.stderr || battleSyntax.stdout}`,
+);
+
+const omikujiScriptMatches = [...omikujiHtml.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+assert.ok(omikujiScriptMatches.length >= 1, "Expected omikuji page to include inline script");
+const omikujiScript = omikujiScriptMatches.at(-1)[1];
+const tempOmikujiScript = path.join(os.tmpdir(), "opanchu-omikuji-game-check.js");
+fs.writeFileSync(tempOmikujiScript, omikujiScript, "utf8");
+const omikujiSyntax = spawnSync(process.execPath, ["--check", tempOmikujiScript], {
+  encoding: "utf8",
+});
+assert.equal(
+  omikujiSyntax.status,
+  0,
+  `Omikuji JavaScript syntax check failed:\n${omikujiSyntax.stderr || omikujiSyntax.stdout}`,
+);
+
 ["welcome", "quiz", "loading", "result"].forEach((id) => {
   includes(`id="${id}"`, `Missing screen #${id}`);
 });
@@ -91,12 +139,16 @@ assert.equal(
 ].forEach((assetKey) => includes(`"${assetKey}"`, `Missing asset key ${assetKey}`));
 
 [
+  "普通パンツタイプ",
   "紐パンタイプ",
   "Tバックタイプ",
   "サニタリーショーツタイプ",
   "ヨレヨレ・ネズミ色タイプ",
   "シームレスタイプ",
 ].forEach((resultName) => includes(resultName, `Missing result ${resultName}`));
+
+includes("normal: 0", "Normal score bucket is missing");
+includes("scores: { normal:", "No choice can produce the normal result");
 
 [
   "朝起きて、前髪",
@@ -130,14 +182,26 @@ assert.ok(
   publicIndex.includes("src/merge-game.html"),
   "Root index.html should link to the merge game",
 );
-["おぱんちゅラボ", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
+assert.ok(
+  publicIndex.includes("src/match3-game.html"),
+  "Root index.html should link to the match3 game",
+);
+assert.ok(
+  publicIndex.includes("src/battle-game.html"),
+  "Root index.html should link to the battle game",
+);
+assert.ok(
+  publicIndex.includes("src/omikuji-game.html"),
+  "Root index.html should link to the omikuji game",
+);
+["おぱんちゅラボ", "assets/opanchu-hero-logo-cutout.png", "assets/opanchu-enter-sign-cutout.png", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
 });
 ["girl-normal.png", "girl-tie.png", "girl-tback.png", "girl-sanitary.png", "girl-gray.png", "girl-seamless.png"].forEach((fileName) => {
   assert.ok(publicIndex.includes(`asset/generated-types/${fileName}`), `Root index should reference ${fileName}`);
 });
 assert.ok(srcIndex.includes("../index.html"), "src/index.html should redirect to the portal");
-["このURLは", "診断を直接開く", "memory-game.html", "merge-game.html"].forEach((needle) => {
+["このURLは", "診断を直接開く", "memory-game.html", "merge-game.html", "match3-game.html", "battle-game.html", "omikuji-game.html"].forEach((needle) => {
   assert.ok(srcIndex.includes(needle), `src/index.html should explain the moved URL: ${needle}`);
 });
 ["おぱんちゅ神経衰弱", "pairs", "moves", "opanchu_memory_best"].forEach((needle) => {
@@ -161,5 +225,24 @@ for (let i = 1; i <= 12; i += 1) {
   const fileName = `p${String(i).padStart(2, "0")}.png`;
   assert.ok(mergeHtml.includes(`../assets/shorts/${fileName}`), `Merge game should reference ${fileName}`);
 }
+["おぱんちゅお片づけパズル", "opanchu_match3_best_stage_", "findPossibleMove", "refillBoard", "preferTargets", "rows: 5", "cols: 5", "types: 8", "stage: 10"].forEach((needle) => {
+  assert.ok(match3Html.includes(needle), `Missing match3 feature: ${needle}`);
+});
+for (let i = 1; i <= 8; i += 1) {
+  const fileName = `p${String(i).padStart(2, "0")}.png`;
+  assert.ok(match3Html.includes(`../assets/shorts/${fileName}`), `Match3 game should reference ${fileName}`);
+}
+["おぱんちゅ盤上バトル", "movesFor", "PLAYER 1", "PLAYER 2", "王札"].forEach((needle) => {
+  assert.ok(battleHtml.includes(needle), `Missing battle feature: ${needle}`);
+});
+for (let i = 1; i <= 6; i += 1) {
+  const fileName = `p${String(i).padStart(2, "0")}.png`;
+  assert.ok(battleHtml.includes(`../assets/shorts/${fileName}`), `Battle game should reference ${fileName}`);
+}
+["おぱんちゅみくじ", "今日のみくじ", "opanchu_omikuji_history", "seededPick", "resultText"].forEach((needle) => {
+  assert.ok(omikujiHtml.includes(needle), `Missing omikuji feature: ${needle}`);
+});
+assert.ok(omikujiHtml.includes("Array.from({ length: 12 }"), "Omikuji game should build the 12 shorts image list");
+assert.ok(omikujiHtml.includes("../assets/shorts/p01.png"), "Omikuji page should have an initial shorts image");
 
 console.log("Static checks passed.");

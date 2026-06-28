@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>おぱんちゅみくじ</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --ink: #111;
+      --paper: #fffaf1;
+      --pink: #ff80bc;
+      --blue: #7dd7ff;
+      --yellow: #ffe66f;
+      --mint: #7fffd0;
+    }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif;
+      background:
+        linear-gradient(rgba(17, 17, 17, .08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(17, 17, 17, .08) 1px, transparent 1px),
+        linear-gradient(135deg, #fff0a6 0%, #ff9ccb 46%, #8be8ff 100%);
+      background-size: 24px 24px, 24px 24px, auto;
+    }
+    button, a { color: inherit; font: inherit; }
+    a { text-decoration: none; }
+    .page {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .back, .mini {
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 10px 13px;
+      font-weight: 1000;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: var(--paper);
+      box-shadow: 8px 8px 0 var(--ink);
+      overflow: hidden;
+    }
+    .stage {
+      display: grid;
+      gap: 18px;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 20% 16%, rgba(255, 255, 255, .82) 0 8%, transparent 8%),
+        radial-gradient(circle at 82% 24%, rgba(255, 255, 255, .65) 0 7%, transparent 7%),
+        linear-gradient(135deg, var(--yellow), var(--blue));
+    }
+    .title {
+      display: grid;
+      gap: 10px;
+    }
+    .label {
+      width: fit-content;
+      border: 4px solid var(--ink);
+      border-radius: 999px;
+      background: white;
+      box-shadow: 4px 4px 0 var(--ink);
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 1000;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(46px, 11vw, 108px);
+      line-height: .88;
+      letter-spacing: 0;
+    }
+    .lead {
+      max-width: 580px;
+      margin: 0;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 12px;
+      font-weight: 900;
+      line-height: 1.55;
+    }
+    .draw-area {
+      display: grid;
+      gap: 14px;
+      align-items: center;
+    }
+    .lot-box {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 280px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 7px 7px 0 var(--ink);
+      overflow: hidden;
+    }
+    .lot-box::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 3px dashed rgba(17, 17, 17, .35);
+      border-radius: 8px;
+    }
+    .lot-card {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(260px, 78%);
+      aspect-ratio: 1 / 1;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: #fff8d8;
+      box-shadow: 7px 7px 0 rgba(17, 17, 17, .22);
+      transform: rotate(-3deg);
+      transition: transform .25s ease;
+    }
+    .lot-card.shaking {
+      animation: shake .38s steps(4, end) infinite;
+    }
+    .lot-card img {
+      width: 88%;
+      height: 88%;
+      object-fit: contain;
+      display: block;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .button {
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: var(--pink);
+      box-shadow: 5px 5px 0 var(--ink);
+      cursor: pointer;
+      padding: 15px 12px;
+      font-weight: 1000;
+    }
+    .button.secondary { background: white; }
+    .button:active {
+      transform: translate(4px, 4px);
+      box-shadow: 1px 1px 0 var(--ink);
+    }
+    .result {
+      display: grid;
+      gap: 12px;
+      border-top: 4px solid var(--ink);
+      background: white;
+      padding: 18px;
+    }
+    .rank {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: start;
+      gap: 12px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: var(--yellow);
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 14px;
+    }
+    .rank small {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 1000;
+      letter-spacing: 0;
+    }
+    .rank h2 {
+      margin: 0;
+      font-size: clamp(34px, 9vw, 74px);
+      line-height: .9;
+      letter-spacing: 0;
+    }
+    .luck-no {
+      display: grid;
+      place-items: center;
+      width: 72px;
+      aspect-ratio: 1 / 1;
+      border: 4px solid var(--ink);
+      border-radius: 999px;
+      background: white;
+      font-weight: 1000;
+      font-size: 22px;
+    }
+    .message, .advice, .history {
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: #fff7d6;
+      padding: 13px;
+      font-weight: 850;
+      line-height: 1.6;
+    }
+    .advice {
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      background: #eafff7;
+    }
+    .advice img {
+      width: 84px;
+      aspect-ratio: 1 / 1;
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      object-fit: contain;
+      padding: 5px;
+    }
+    .history {
+      display: grid;
+      gap: 8px;
+      background: #f8e6ff;
+    }
+    .history h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .history-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .history-list li {
+      border: 3px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      padding: 9px 10px;
+      font-weight: 900;
+    }
+    .toast {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 5;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 var(--ink);
+      padding: 12px 14px;
+      font-weight: 1000;
+    }
+    .toast[hidden] { display: none; }
+    @keyframes shake {
+      0% { transform: translateX(-5px) rotate(-6deg); }
+      50% { transform: translateX(5px) rotate(5deg); }
+      100% { transform: translateX(-3px) rotate(-4deg); }
+    }
+    @media (min-width: 880px) {
+      .page { padding: 28px; }
+      .hero { grid-template-columns: minmax(0, 1fr) 430px; }
+      .result { border-top: 0; border-left: 4px solid var(--ink); }
+      .stage { min-height: calc(100vh - 118px); align-content: center; }
+      .lot-box { min-height: 390px; }
+    }
+    @media (max-width: 540px) {
+      .topbar { display: grid; }
+      .controls { grid-template-columns: 1fr; }
+      .rank { grid-template-columns: 1fr; }
+      .advice { grid-template-columns: 1fr; }
+      .advice img { width: 100%; max-width: 150px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="topbar" aria-label="ナビゲーション">
+      <a class="back" href="../index.html">← ラボ入口</a>
+      <span class="mini" id="todayLabel">TODAY</span>
+    </nav>
+
+    <section class="hero" aria-label="おぱんちゅみくじ">
+      <div class="stage">
+        <div class="title">
+          <span class="label">FORTUNE</span>
+          <h1>おぱんちゅ<br>みくじ</h1>
+          <p class="lead">今日の運勢をパンツ札で占います。大吉でも凶でも、最後はちょっと笑って帰る用です。</p>
+        </div>
+        <div class="draw-area">
+          <div class="lot-box">
+            <div class="lot-card" id="lotCard">
+              <img id="pantsImage" src="../assets/shorts/p01.png" alt="">
+            </div>
+          </div>
+          <div class="controls">
+            <button class="button" id="drawBtn" type="button">おみくじを引く</button>
+            <button class="button secondary" id="dailyBtn" type="button">今日のみくじ</button>
+            <button class="button secondary" id="copyBtn" type="button">結果コピー</button>
+            <button class="button secondary" id="resetBtn" type="button">履歴リセット</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="result" aria-live="polite">
+        <div class="rank">
+          <span>
+            <small id="resultMode">きょうの運勢</small>
+            <h2 id="fortuneName">待機中</h2>
+          </span>
+          <span class="luck-no" id="luckNo">--</span>
+        </div>
+        <p class="message" id="message">まずはみくじを引いてください。今日のパンツ札が、だいたいの気分を決めます。</p>
+        <div class="advice">
+          <img id="adviceImage" src="../assets/shorts/p01.png" alt="">
+          <p id="adviceText">ラッキーおぱんちゅはまだ未確定です。</p>
+        </div>
+        <section class="history" aria-label="みくじ履歴">
+          <h3>最近の結果</h3>
+          <ul class="history-list" id="historyList"></ul>
+        </section>
+      </aside>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script>
+    const fortunes = [
+      { rank: "大吉", score: 98, tone: "#ffe66f", msg: "今日は勢いだけでだいたい勝てます。返信も支度も、深く考える前に動くと吉。", advice: "ラッキー行動は、少し派手な色をひとつ足すこと。" },
+      { rank: "中吉", score: 82, tone: "#7dd7ff", msg: "ちゃんと整っている日。無理に目立たなくても、いつものテンポで好印象を取れます。", advice: "ラッキー行動は、飲み物を買う前に一回だけ深呼吸。" },
+      { rank: "小吉", score: 68, tone: "#7fffd0", msg: "小さくいいことが重なる日。大事件はないけど、地味に助かる展開がありそう。", advice: "ラッキー行動は、机やバッグの中をひとつだけ片づけること。" },
+      { rank: "吉", score: 59, tone: "#fffaf1", msg: "普通に見えて、普通に強い日。淡々と過ごせば、変な波に巻き込まれません。", advice: "ラッキー行動は、いつも通りを堂々とやること。" },
+      { rank: "末吉", score: 44, tone: "#ffd6ea", msg: "あとからじわっと良くなる日。朝のテンションで一日を決めつけないでください。", advice: "ラッキー行動は、午後に予定をひとつ軽くすること。" },
+      { rank: "半吉", score: 36, tone: "#e7ddff", msg: "勝ちと負けが半分ずつ来ます。勝ったところだけ覚えて、負けたところは流すのが正解。", advice: "ラッキー行動は、通知を一回だけ見なかったことにすること。" },
+      { rank: "凶", score: 18, tone: "#cfd8dc", msg: "今日は無理をすると変な方向に転びます。低燃費モードで守りきれば実質勝ち。", advice: "ラッキー行動は、早めに帰る理由を先に作っておくこと。" },
+      { rank: "大凶", score: 7, tone: "#b0b7c3", msg: "ツッコミ待ちの一日です。何か起きても、ネタが増えたと思えばギリギリ勝ち。", advice: "ラッキー行動は、がんばらない宣言を心の中で出すこと。" }
+    ];
+    const pants = Array.from({ length: 12 }, (_, index) => {
+      const number = String(index + 1).padStart(2, "0");
+      return `../assets/shorts/p${number}.png`;
+    });
+    const historyKey = "opanchu_omikuji_history";
+    const dailyKey = "opanchu_omikuji_daily";
+    const state = { fortune: fortunes[3], pantsIndex: 0, mode: "きょうの運勢" };
+
+    const $ = id => document.getElementById(id);
+    const today = () => new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" });
+    const seedFrom = text => [...text].reduce((sum, char) => (sum * 31 + char.charCodeAt(0)) >>> 0, 2166136261);
+    const seededPick = seed => {
+      const fortune = fortunes[seed % fortunes.length];
+      const pantsIndex = Math.floor(seed / fortunes.length) % pants.length;
+      return { fortune, pantsIndex };
+    };
+    const randomPick = () => ({ fortune: fortunes[Math.floor(Math.random() * fortunes.length)], pantsIndex: Math.floor(Math.random() * pants.length) });
+
+    function toast(message) {
+      $("toast").textContent = message;
+      $("toast").hidden = false;
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => $("toast").hidden = true, 1800);
+    }
+
+    function history() {
+      return JSON.parse(localStorage.getItem(historyKey) || "[]");
+    }
+
+    function saveHistory(entry) {
+      localStorage.setItem(historyKey, JSON.stringify([entry, ...history()].slice(0, 5)));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const items = history();
+      $("historyList").innerHTML = items.length
+        ? items.map(item => `<li>${item.date} / ${item.rank} / No.${item.no}</li>`).join("")
+        : "<li>まだ履歴はありません</li>";
+    }
+
+    function render(result, mode, shouldSave = true) {
+      state.fortune = result.fortune;
+      state.pantsIndex = result.pantsIndex;
+      state.mode = mode;
+      const no = String(result.pantsIndex + 1).padStart(2, "0");
+      $("resultMode").textContent = mode;
+      $("fortuneName").textContent = result.fortune.rank;
+      $("luckNo").textContent = no;
+      $("message").textContent = result.fortune.msg;
+      $("adviceText").textContent = `ラッキーおぱんちゅ No.${no}。${result.fortune.advice}`;
+      $("pantsImage").src = pants[result.pantsIndex];
+      $("adviceImage").src = pants[result.pantsIndex];
+      document.querySelector(".rank").style.background = result.fortune.tone;
+      if (shouldSave) saveHistory({ date: today(), rank: result.fortune.rank, no });
+    }
+
+    function spin(result, mode, shouldSave = true) {
+      $("lotCard").classList.add("shaking");
+      let frame = 0;
+      const timer = setInterval(() => {
+        frame += 1;
+        const index = Math.floor(Math.random() * pants.length);
+        $("pantsImage").src = pants[index];
+        if (frame > 9) {
+          clearInterval(timer);
+          $("lotCard").classList.remove("shaking");
+          render(result, mode, shouldSave);
+        }
+      }, 70);
+    }
+
+    function drawRandom() {
+      spin(randomPick(), "いま引いた運勢");
+    }
+
+    function drawDaily() {
+      const date = today();
+      const saved = JSON.parse(localStorage.getItem(dailyKey) || "null");
+      if (saved && saved.date === date) {
+        spin({ fortune: fortunes[saved.fortuneIndex], pantsIndex: saved.pantsIndex }, "きょうの運勢", false);
+        toast("今日のみくじを表示しました");
+        return;
+      }
+      const seed = seedFrom(date);
+      const result = seededPick(seed);
+      localStorage.setItem(dailyKey, JSON.stringify({ date, fortuneIndex: fortunes.indexOf(result.fortune), pantsIndex: result.pantsIndex }));
+      spin(result, "きょうの運勢");
+    }
+
+    function resultText() {
+      const no = String(state.pantsIndex + 1).padStart(2, "0");
+      return `おぱんちゅみくじの結果は「${state.fortune.rank}」です。\nラッキーおぱんちゅ No.${no}\n${state.fortune.msg}\n${state.fortune.advice}`;
+    }
+
+    async function copyResult() {
+      const text = resultText();
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        toast("結果をコピーしました");
+        return;
+      }
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+      toast("結果をコピーしました");
+    }
+
+    $("todayLabel").textContent = today();
+    $("drawBtn").addEventListener("click", drawRandom);
+    $("dailyBtn").addEventListener("click", drawDaily);
+    $("copyBtn").addEventListener("click", copyResult);
+    $("resetBtn").addEventListener("click", () => {
+      localStorage.removeItem(historyKey);
+      renderHistory();
+      toast("履歴をリセットしました");
+    });
+
+    renderHistory();
+    render(seededPick(seedFrom(today())), "きょうの運勢", false);
+  </script>
+</body>
+</html>
