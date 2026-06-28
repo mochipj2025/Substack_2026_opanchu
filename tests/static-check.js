@@ -22,6 +22,8 @@ const omikujiHtml = fs.readFileSync(omikujiPath, "utf8");
 const takopanCoverPath = path.join(root, "assets", "takopan-memory-card-final.png");
 const publicIndexPath = path.join(root, "index.html");
 const publicIndex = fs.readFileSync(publicIndexPath, "utf8");
+const portalPath = path.join(root, "src", "portal.html");
+const portalHtml = fs.readFileSync(portalPath, "utf8");
 
 function includes(text, message) {
   assert.ok(html.includes(text), message || `Expected HTML to include ${text}`);
@@ -171,37 +173,51 @@ const qCount = (appScript.match(/\btext: '/g) || []).length;
 assert.ok(qCount >= 5, `Expected question/result text data, found only ${qCount} text entries`);
 
 assert.ok(
-  publicIndex.includes("src/diagnosis.html"),
-  "Root index.html should link to src/diagnosis.html",
+  publicIndex.includes("src/portal.html"),
+  "Root index.html should link to the portal page",
 );
 assert.ok(
-  publicIndex.includes("src/memory-game.html"),
-  "Root index.html should link to the memory game",
+  !publicIndex.includes("src/diagnosis.html"),
+  "Root index.html should keep diagnosis/game links on the portal page",
 );
-assert.ok(
-  publicIndex.includes("src/merge-game.html"),
-  "Root index.html should link to the merge game",
-);
-assert.ok(
-  publicIndex.includes("src/match3-game.html"),
-  "Root index.html should link to the match3 game",
-);
-assert.ok(
-  publicIndex.includes("src/battle-game.html"),
-  "Root index.html should link to the battle game",
-);
-assert.ok(
-  publicIndex.includes("src/omikuji-game.html"),
-  "Root index.html should link to the omikuji game",
-);
-["おぱんちゅラボ", "assets/opanchu-hero-logo-cutout.png", "assets/opanchu-enter-sign-cutout.png", "assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
+[
+  "assets/opanchu-hero-logo.png",
+  "ゲームページへ",
+].forEach((needle) => {
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);
 });
+assert.ok(
+  portalHtml.includes("diagnosis.html"),
+  "Portal page should link to diagnosis.html",
+);
+assert.ok(
+  portalHtml.includes("memory-game.html"),
+  "Portal page should link to the memory game",
+);
+assert.ok(
+  portalHtml.includes("merge-game.html"),
+  "Portal page should link to the merge game",
+);
+assert.ok(
+  portalHtml.includes("match3-game.html"),
+  "Portal page should link to the match3 game",
+);
+assert.ok(
+  portalHtml.includes("battle-game.html"),
+  "Portal page should link to the battle game",
+);
+assert.ok(
+  portalHtml.includes("omikuji-game.html"),
+  "Portal page should link to the omikuji game",
+);
+["おぱんちゅラボ", "../assets/opanchu-hero-logo.png", "../assets/takopan-memory-card-final.png", "JKパンツ生存戦略診断"].forEach((needle) => {
+  assert.ok(portalHtml.includes(needle), `Portal should include ${needle}`);
+});
 ["girl-normal.png", "girl-tie.png", "girl-tback.png", "girl-sanitary.png", "girl-gray.png", "girl-seamless.png"].forEach((fileName) => {
-  assert.ok(publicIndex.includes(`asset/generated-types/${fileName}`), `Root index should reference ${fileName}`);
+  assert.ok(portalHtml.includes(`../asset/generated-types/${fileName}`), `Portal should reference ${fileName}`);
 });
 assert.ok(srcIndex.includes("../index.html"), "src/index.html should redirect to the portal");
-["このURLは", "診断を直接開く", "memory-game.html", "merge-game.html", "match3-game.html", "battle-game.html", "omikuji-game.html"].forEach((needle) => {
+["このURLは", "portal.html", "診断を直接開く", "memory-game.html", "merge-game.html", "match3-game.html", "battle-game.html", "omikuji-game.html"].forEach((needle) => {
   assert.ok(srcIndex.includes(needle), `src/index.html should explain the moved URL: ${needle}`);
 });
 ["おぱんちゅ神経衰弱", "pairs", "moves", "opanchu_memory_best"].forEach((needle) => {
