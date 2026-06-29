@@ -344,10 +344,94 @@
     }
     @media (max-width: 540px) {
       .topbar { display: grid; }
-      .controls { grid-template-columns: 1fr; }
-      .rank { grid-template-columns: 1fr; }
-      .advice { grid-template-columns: 1fr; }
-      .advice img { width: 100%; max-width: 150px; }
+      .page { padding: 10px; }
+      .topbar {
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+      .back, .mini {
+        border-width: 3px;
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 8px 10px;
+      }
+      .stage {
+        gap: 12px;
+        padding: 12px;
+      }
+      .label {
+        border-width: 3px;
+        padding: 5px 10px;
+        font-size: 12px;
+      }
+      h1 {
+        font-size: clamp(40px, 16vw, 64px);
+      }
+      .lead {
+        border-width: 3px;
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 9px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .lot-box {
+        min-height: 220px;
+      }
+      .lot-card {
+        width: min(190px, 72%);
+      }
+      .lot-slip {
+        width: 66px;
+        font-size: 18px;
+      }
+      .controls {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .button {
+        border-width: 3px;
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 10px 8px;
+        font-size: 14px;
+      }
+      .result {
+        gap: 8px;
+        padding: 10px;
+      }
+      .rank {
+        grid-template-columns: minmax(0, 1fr) 56px;
+        border-width: 3px;
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 10px;
+      }
+      .rank small {
+        margin-bottom: 3px;
+        font-size: 12px;
+      }
+      .rank h2 {
+        font-size: clamp(42px, 16vw, 58px);
+      }
+      .luck-no {
+        width: 56px;
+        border-width: 3px;
+        font-size: 18px;
+      }
+      .message, .advice {
+        border-width: 3px;
+        padding: 10px;
+        font-size: 13px;
+        line-height: 1.45;
+      }
+      .advice {
+        grid-template-columns: 78px minmax(0, 1fr);
+        gap: 10px;
+      }
+      .advice img {
+        width: 78px;
+        border-width: 3px;
+      }
+      .history {
+        display: none;
+      }
     }
   </style>
 </head>
@@ -475,6 +559,9 @@
       $("lotCard").classList.remove("ready");
       document.querySelector(".rank").style.background = result.fortune.tone;
       if (shouldSave) saveHistory({ date: today(), rank: result.fortune.rank, no });
+      if (window.matchMedia("(max-width: 540px)").matches) {
+        $("resultPanel").scrollIntoView({ block: "start", behavior: "smooth" });
+      }
     }
 
     function spin(result, mode, shouldSave = true) {
