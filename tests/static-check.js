@@ -182,6 +182,7 @@ assert.ok(
 );
 [
   "assets/opanchu-hero-logo.png",
+  "assets/opanchu-enter-sign.png",
   "ゲームページへ",
 ].forEach((needle) => {
   assert.ok(publicIndex.includes(needle), `Root index should include ${needle}`);

@@ -44,14 +44,24 @@
     }
     .hero-link {
       display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
       place-items: center;
+      gap: clamp(10px, 3vw, 22px);
       min-height: inherit;
+      padding: clamp(16px, 4vw, 44px);
     }
     .logo {
-      width: 100%;
-      height: 100%;
+      width: min(100%, 1080px);
+      max-height: 420px;
       object-fit: contain;
       display: block;
+    }
+    .enter-sign {
+      width: min(88%, 820px);
+      max-height: 260px;
+      object-fit: contain;
+      display: block;
+      transform: translateY(-10px);
     }
     .sr-only {
       position: absolute;
@@ -69,6 +79,17 @@
       .hero {
         min-height: calc(100vh - 24px);
       }
+      .hero-link {
+        padding: 12px 6px;
+      }
+      .logo {
+        max-height: 300px;
+      }
+      .enter-sign {
+        width: 100%;
+        max-height: 230px;
+        transform: none;
+      }
     }
   </style>
 </head>
@@ -78,6 +99,7 @@
       <h1 class="sr-only">おぱんちゅラボ</h1>
       <a class="hero-link" href="src/portal.html" aria-label="ゲームページへ">
         <img class="logo" src="assets/opanchu-hero-logo.png" alt="">
+        <img class="enter-sign" src="assets/opanchu-enter-sign.png" alt="">
       </a>
     </section>
   </main>
