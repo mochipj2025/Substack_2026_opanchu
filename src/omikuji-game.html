@@ -540,6 +540,31 @@
         : "<li>まだ履歴はありません</li>";
     }
 
+    function savedDaily() {
+      const saved = JSON.parse(localStorage.getItem(dailyKey) || "null");
+      if (!saved || saved.date !== today()) return null;
+      if (!fortunes[saved.fortuneIndex] || !pants[saved.pantsIndex]) return null;
+      return saved;
+    }
+
+    function resultFromSaved(saved) {
+      return { fortune: fortunes[saved.fortuneIndex], pantsIndex: saved.pantsIndex };
+    }
+
+    function saveDaily(result) {
+      localStorage.setItem(dailyKey, JSON.stringify({
+        date: today(),
+        fortuneIndex: fortunes.indexOf(result.fortune),
+        pantsIndex: result.pantsIndex
+      }));
+    }
+
+    function updateDailyControls() {
+      const used = Boolean(savedDaily());
+      $("drawBtn").textContent = used ? "今日の結果を見る" : "おみくじを引く";
+      $("dailyBtn").textContent = used ? "引き直し不可" : "今日のみくじ";
+    }
+
     function render(result, mode, shouldSave = true) {
       state.fortune = result.fortune;
       state.pantsIndex = result.pantsIndex;
@@ -559,6 +584,7 @@
       $("lotCard").classList.remove("ready");
       document.querySelector(".rank").style.background = result.fortune.tone;
       if (shouldSave) saveHistory({ date: today(), rank: result.fortune.rank, no });
+      updateDailyControls();
       if (window.matchMedia("(max-width: 540px)").matches) {
         $("resultPanel").scrollIntoView({ block: "start", behavior: "smooth" });
       }
@@ -598,20 +624,27 @@
     }
 
     function drawRandom() {
-      spin(randomPick(), "いま引いた運勢");
+      const saved = savedDaily();
+      if (saved) {
+        spin(resultFromSaved(saved), "本日の結果（引き済み）", false);
+        toast("今日はもう引いています");
+        return;
+      }
+      const result = randomPick();
+      saveDaily(result);
+      spin(result, "いま引いた運勢");
     }
 
     function drawDaily() {
-      const date = today();
-      const saved = JSON.parse(localStorage.getItem(dailyKey) || "null");
-      if (saved && saved.date === date) {
-        spin({ fortune: fortunes[saved.fortuneIndex], pantsIndex: saved.pantsIndex }, "きょうの運勢", false);
-        toast("今日のみくじを表示しました");
+      const saved = savedDaily();
+      if (saved) {
+        spin(resultFromSaved(saved), "本日の結果（引き済み）", false);
+        toast("今日の結果を表示しました");
         return;
       }
-      const seed = seedFrom(date);
+      const seed = seedFrom(today());
       const result = seededPick(seed);
-      localStorage.setItem(dailyKey, JSON.stringify({ date, fortuneIndex: fortunes.indexOf(result.fortune), pantsIndex: result.pantsIndex }));
+      saveDaily(result);
       spin(result, "きょうの運勢");
     }
 
@@ -653,6 +686,13 @@
     });
 
     renderHistory();
+    const saved = savedDaily();
+    if (saved) {
+      render(resultFromSaved(saved), "本日の結果（引き済み）", false);
+      $("message").textContent += " 今日のおみくじは引き直せません。";
+    } else {
+      updateDailyControls();
+    }
   </script>
 </body>
 </html>

@@ -256,7 +256,7 @@ for (let i = 1; i <= 6; i += 1) {
   const fileName = `p${String(i).padStart(2, "0")}.png`;
   assert.ok(battleHtml.includes(`../assets/shorts/${fileName}`), `Battle game should reference ${fileName}`);
 }
-["おぱんちゅみくじ", "今日のみくじ", "opanchu_omikuji_history", "seededPick", "resultText"].forEach((needle) => {
+["おぱんちゅみくじ", "今日のみくじ", "opanchu_omikuji_history", "opanchu_omikuji_daily", "引き直し不可", "seededPick", "resultText"].forEach((needle) => {
   assert.ok(omikujiHtml.includes(needle), `Missing omikuji feature: ${needle}`);
 });
 assert.ok(omikujiHtml.includes("Array.from({ length: 12 }"), "Omikuji game should build the 12 shorts image list");
