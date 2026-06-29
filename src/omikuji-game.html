@@ -81,7 +81,7 @@
     }
     h1 {
       margin: 0;
-      font-size: clamp(46px, 11vw, 108px);
+      font-size: clamp(42px, 10vw, 92px);
       line-height: .88;
       letter-spacing: 0;
     }
@@ -127,19 +127,76 @@
       aspect-ratio: 1 / 1;
       border: 4px solid var(--ink);
       border-radius: 8px;
-      background: #fff8d8;
+      background:
+        linear-gradient(90deg, rgba(17, 17, 17, .08) 1px, transparent 1px),
+        linear-gradient(#fff8d8, #fff1a8);
+      background-size: 18px 100%, auto;
       box-shadow: 7px 7px 0 rgba(17, 17, 17, .22);
       transform: rotate(-3deg);
       transition: transform .25s ease;
+      overflow: hidden;
     }
     .lot-card.shaking {
       animation: shake .38s steps(4, end) infinite;
+    }
+    .lot-card.revealed {
+      background: white;
+      transform: rotate(1deg);
     }
     .lot-card img {
       width: 88%;
       height: 88%;
       object-fit: contain;
       display: block;
+    }
+    .lot-card:not(.revealed) img {
+      opacity: .18;
+      transform: scale(.8);
+    }
+    .lot-slip {
+      position: absolute;
+      inset: 18px auto 18px 50%;
+      display: grid;
+      place-items: center;
+      width: 82px;
+      border: 4px solid var(--ink);
+      border-radius: 8px;
+      background: white;
+      box-shadow: 5px 5px 0 rgba(17, 17, 17, .22);
+      color: var(--ink);
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1.15;
+      text-align: center;
+      writing-mode: vertical-rl;
+      transform: translateX(-50%) translateY(118%) rotate(1deg);
+      transition: transform .28s ease;
+      z-index: 2;
+    }
+    .lot-card.ready .lot-slip {
+      transform: translateX(-50%) translateY(0) rotate(1deg);
+    }
+    .lot-card.revealed .lot-slip {
+      transform: translateX(-50%) translateY(-122%) rotate(1deg);
+    }
+    .lot-card::after {
+      content: "おぱんちゅみくじ";
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      border: 3px solid var(--ink);
+      border-radius: 999px;
+      background: var(--pink);
+      padding: 6px 8px;
+      font-size: 14px;
+      font-weight: 1000;
+      text-align: center;
+    }
+    .lot-card.revealed::after {
+      content: attr(data-rank);
+      background: var(--yellow);
+      font-size: 20px;
     }
     .controls {
       display: grid;
@@ -160,12 +217,22 @@
       transform: translate(4px, 4px);
       box-shadow: 1px 1px 0 var(--ink);
     }
+    .button:disabled {
+      cursor: wait;
+      opacity: .62;
+      transform: none;
+    }
     .result {
       display: grid;
       gap: 12px;
       border-top: 4px solid var(--ink);
       background: white;
       padding: 18px;
+    }
+    .result.waiting .rank,
+    .result.waiting .message,
+    .result.waiting .advice {
+      opacity: .72;
     }
     .rank {
       display: grid;
@@ -271,7 +338,9 @@
       .hero { grid-template-columns: minmax(0, 1fr) 430px; }
       .result { border-top: 0; border-left: 4px solid var(--ink); }
       .stage { min-height: calc(100vh - 118px); align-content: center; }
-      .lot-box { min-height: 390px; }
+      .lot-box { min-height: 280px; }
+      .controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .button { padding: 13px 8px; }
     }
     @media (max-width: 540px) {
       .topbar { display: grid; }
@@ -298,7 +367,8 @@
         </div>
         <div class="draw-area">
           <div class="lot-box">
-            <div class="lot-card" id="lotCard">
+            <div class="lot-card ready" id="lotCard" data-rank="待機中">
+              <span class="lot-slip" id="lotSlip">おみくじ</span>
               <img id="pantsImage" src="../assets/shorts/p01.png" alt="">
             </div>
           </div>
@@ -311,7 +381,7 @@
         </div>
       </div>
 
-      <aside class="result" aria-live="polite">
+      <aside class="result waiting" id="resultPanel" aria-live="polite">
         <div class="rank">
           <span>
             <small id="resultMode">きょうの運勢</small>
@@ -319,10 +389,10 @@
           </span>
           <span class="luck-no" id="luckNo">--</span>
         </div>
-        <p class="message" id="message">まずはみくじを引いてください。今日のパンツ札が、だいたいの気分を決めます。</p>
+        <p class="message" id="message">まずはおみくじを引いてください。札が出るまで結果は内緒です。</p>
         <div class="advice">
           <img id="adviceImage" src="../assets/shorts/p01.png" alt="">
-          <p id="adviceText">ラッキーおぱんちゅはまだ未確定です。</p>
+          <p id="adviceText">ラッキーおぱんちゅは、札を引いたあとに表示されます。</p>
         </div>
         <section class="history" aria-label="みくじ履歴">
           <h3>最近の結果</h3>
@@ -351,7 +421,7 @@
     });
     const historyKey = "opanchu_omikuji_history";
     const dailyKey = "opanchu_omikuji_daily";
-    const state = { fortune: fortunes[3], pantsIndex: 0, mode: "きょうの運勢" };
+    const state = { fortune: null, pantsIndex: 0, mode: "きょうの運勢", spinning: false };
 
     const $ = id => document.getElementById(id);
     const today = () => new Date().toLocaleDateString("ja-JP", { year: "numeric", month: "2-digit", day: "2-digit" });
@@ -391,6 +461,7 @@
       state.pantsIndex = result.pantsIndex;
       state.mode = mode;
       const no = String(result.pantsIndex + 1).padStart(2, "0");
+      $("resultPanel").classList.remove("waiting");
       $("resultMode").textContent = mode;
       $("fortuneName").textContent = result.fortune.rank;
       $("luckNo").textContent = no;
@@ -398,23 +469,45 @@
       $("adviceText").textContent = `ラッキーおぱんちゅ No.${no}。${result.fortune.advice}`;
       $("pantsImage").src = pants[result.pantsIndex];
       $("adviceImage").src = pants[result.pantsIndex];
+      $("lotSlip").textContent = result.fortune.rank;
+      $("lotCard").dataset.rank = result.fortune.rank;
+      $("lotCard").classList.add("revealed");
+      $("lotCard").classList.remove("ready");
       document.querySelector(".rank").style.background = result.fortune.tone;
       if (shouldSave) saveHistory({ date: today(), rank: result.fortune.rank, no });
     }
 
     function spin(result, mode, shouldSave = true) {
-      $("lotCard").classList.add("shaking");
+      if (state.spinning) return;
+      state.spinning = true;
+      const lotCard = $("lotCard");
+      $("drawBtn").disabled = true;
+      $("dailyBtn").disabled = true;
+      lotCard.classList.remove("revealed");
+      lotCard.classList.add("ready", "shaking");
+      lotCard.dataset.rank = "抽選中";
+      $("lotSlip").textContent = "抽選中";
+      $("fortuneName").textContent = "抽選中";
+      $("luckNo").textContent = "--";
+      $("message").textContent = "箱をふっています。パンツ札が出るまで少し待ってください。";
+      $("adviceText").textContent = "ラッキーおぱんちゅを選んでいます。";
+      $("resultPanel").classList.add("waiting");
       let frame = 0;
       const timer = setInterval(() => {
         frame += 1;
         const index = Math.floor(Math.random() * pants.length);
         $("pantsImage").src = pants[index];
-        if (frame > 9) {
+        if (frame > 8) {
           clearInterval(timer);
-          $("lotCard").classList.remove("shaking");
-          render(result, mode, shouldSave);
+          lotCard.classList.remove("shaking");
+          setTimeout(() => {
+            render(result, mode, shouldSave);
+            state.spinning = false;
+            $("drawBtn").disabled = false;
+            $("dailyBtn").disabled = false;
+          }, 90);
         }
-      }, 70);
+      }, 54);
     }
 
     function drawRandom() {
@@ -436,6 +529,9 @@
     }
 
     function resultText() {
+      if (!state.fortune) {
+        return "おぱんちゅみくじは、まだ結果が出ていません。";
+      }
       const no = String(state.pantsIndex + 1).padStart(2, "0");
       return `おぱんちゅみくじの結果は「${state.fortune.rank}」です。\nラッキーおぱんちゅ No.${no}\n${state.fortune.msg}\n${state.fortune.advice}`;
     }
@@ -470,7 +566,6 @@
     });
 
     renderHistory();
-    render(seededPick(seedFrom(today())), "きょうの運勢", false);
   </script>
 </body>
 </html>
